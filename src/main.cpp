@@ -42,6 +42,7 @@ int main() {
   std::vector<powerup> speedPowerups;
   std::vector<powerup> ammoPowerups;
   std::vector<powerup> shieldPowerups;
+  std::vector<powerup> powerups;
   bool forceSprint = false, forceAmmo = false, forceShield = false,
        forceSound = getData(soundOptionFilePath);
 
@@ -170,13 +171,16 @@ int main() {
         key = GetRandomValue(1, 20);
         if (key == 5) {
           powerup Power(screenWidth, screenHeight, SPEED_POWERUP);
-          speedPowerups.push_back(Power);
+          // speedPowerups.push_back(Power);
+          powerups.push_back(Power);
         } else if (key == 6) {
           powerup Power(screenWidth, screenHeight, AMMO_POWERUP);
-          ammoPowerups.push_back(Power);
+          powerups.push_back(Power);
+          // ammoPowerups.push_back(Power);
         } else if (key == 1) {
           powerup Power(screenWidth, screenHeight, SHIELD_POWERUP);
-          shieldPowerups.push_back(Power);
+          powerups.push_back(Power);
+          // shieldPowerups.push_back(Power);
         }
 
         frameCount = 0;
@@ -310,47 +314,29 @@ int main() {
         smEnemy.update(p.getPos());
       }
 
-      for (size_t i = 0; i < speedPowerups.size(); i++) {
-        powerup &Power = speedPowerups[i];
+      for (size_t i = 0; i < powerups.size(); i++) {
+        powerup &Power = powerups[i];
         Rectangle powerHitbox = Power.getHitBox();
         if (CheckCollisionCircleRec(p.getPos(), 20.0f, powerHitbox)) {
-          forceSprint = true;
-          powerUpFrameCounter = powerupFrameCount;
-          speedPowerups.erase(speedPowerups.begin() + i);
-          if (forceSound) {
-            int i = GetRandomValue(0, 1);
-            PlaySound(powerUpSounds[i]);
+          switch (Power.getType()) {
+          case SPEED_POWERUP:
+            forceSprint = true;
+            powerUpFrameCounter = powerupFrameCount;
+            break;
+          case AMMO_POWERUP:
+            forceAmmo = true;
+            powerUpFrameCounter = powerupFrameCount;
+            break;
+          case SHIELD_POWERUP:
+            forceShield = true;
+            break;
+          default:
+            break;
           }
-          continue;
-        }
-        Power.update();
-      }
-
-      for (size_t i = 0; i < ammoPowerups.size(); i++) {
-        powerup &Power = ammoPowerups[i];
-        Rectangle powerHitbox = Power.getHitBox();
-        if (CheckCollisionCircleRec(p.getPos(), 20.0f, powerHitbox)) {
-          forceAmmo = true;
-          powerUpFrameCounter = powerupFrameCount;
-          ammoPowerups.erase(ammoPowerups.begin() + i);
+          powerups.erase(powerups.begin() + i);
           if (forceSound) {
-            int i = GetRandomValue(0, 1);
-            PlaySound(powerUpSounds[i]);
-          }
-          continue;
-        }
-        Power.update();
-      }
-
-      for (size_t i = 0; i < shieldPowerups.size(); i++) {
-        powerup &Power = shieldPowerups[i];
-        Rectangle powerHitbox = Power.getHitBox();
-        if (CheckCollisionCircleRec(p.getPos(), 20.0f, powerHitbox)) {
-          forceShield = true;
-          shieldPowerups.erase(shieldPowerups.begin() + i);
-          if (forceSound) {
-            int i = GetRandomValue(0, 1);
-            PlaySound(powerUpSounds[i]);
+            int soundEffectId = GetRandomValue(0, 1);
+            PlaySound(powerUpSounds[soundEffectId]);
           }
           continue;
         }

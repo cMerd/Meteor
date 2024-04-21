@@ -31,8 +31,8 @@ void powerup::update() {
   }
   case SHIELD_POWERUP: {
     powerup_color = BLUE;
-    const std::string imagePath =
-        std::string(GetApplicationDirectory()) + "/../assets/shield_powerup.png";
+    const std::string imagePath = std::string(GetApplicationDirectory()) +
+                                  "/../assets/shield_powerup.png";
     Image asset = LoadImage(imagePath.c_str());
     Texture2D texture = LoadTextureFromImage(asset);
     DrawTexture(texture, position.x, position.y, WHITE);
@@ -48,3 +48,5 @@ void powerup::update() {
 Rectangle powerup::getHitBox() {
   return (Rectangle){position.x, position.y, 20, 20};
 }
+
+POWERUP powerup::getType() { return this->power_up; }
