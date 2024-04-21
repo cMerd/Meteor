@@ -142,9 +142,9 @@ int main() {
 
       frameCount += 1;
 
-      if (((frameCount / 240) % 2) == 1) {
+      if (shouldSpawnEnemies(frameCount)) {
 
-        for (unsigned int i = 0; i < 8 + currentScore / 60; i++) {
+        for (unsigned int i = 0; i < getNewEnemyCount(currentScore); i++) {
           enemy Enemy(screenWidth, screenHeight, (float)getRandomValue());
           enemies.push_back(Enemy);
         }

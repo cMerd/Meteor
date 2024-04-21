@@ -20,6 +20,14 @@ void DrawProgressBar(int posX, int posY, int width, int height, float progress,
   DrawRectangle(posX, posY, barWidth, height, barColor);
 }
 
+bool shouldSpawnEnemies(int frameCount) {
+  return ((frameCount / 240) % 2) == 1;
+}
+
+int getNewEnemyCount(int currentScore) { return currentScore / 60 + 8; }
+
+
+
 int getRandomValue() {
   auto now = std::chrono::high_resolution_clock::now();
   auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -34,4 +42,3 @@ int getRandomValue() {
     return std::rand() % (MAX_VALUE - 3 + 1) + 3;
   }
 }
-
