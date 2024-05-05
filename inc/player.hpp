@@ -3,17 +3,18 @@
 #include "bullet.hpp"
 #include "raylib.h"
 
-
 class player {
 public:
   player(Vector2 playerPos, Color playerColor, int screenWidth,
          int screenHeight);
-  void update(bool force, bool force2, Sound bulletSound, bool forceSound, bool forceShield);
+  void update(bool force, bool force2, Sound bulletSound, bool forceSound,
+              bool forceShield);
   void noCheckUpdate();
   float getCharge();
   float getAmmo();
   bullet *getBullet();
   Vector2 getPos();
+  int getGamepadId();
 
 private:
   void checkPosition();
@@ -28,4 +29,5 @@ private:
   bullet ammo;
   Image playerSprite;
   Texture2D playerTexture;
+  int gamepad = 1;
 };

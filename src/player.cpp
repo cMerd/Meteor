@@ -1,7 +1,12 @@
 #include "../inc/player.hpp"
 #include <algorithm>
+#include <cmath>
 #include <raylib.h>
 #include <string>
+
+#define XBOX360_LEGACY_NAME_ID "Xbox Controller"
+#define XBOX360_NAME_ID "Xbox 360 Controller"
+#define PS3_NAME_ID "PLAYSTATION(R)3 Controller"
 
 player::player(Vector2 playerPos, Color playerColor, int screenWidth,
                int screenHeight) {
@@ -12,10 +17,37 @@ player::player(Vector2 playerPos, Color playerColor, int screenWidth,
   ammo = bullet((Rectangle){-1, -1, 20, 20}, YELLOW);
 }
 
-void player::update(bool force, bool force2, Sound bulletSound, bool forceSound, bool forceShield) {
+void player::update(bool force, bool force2, Sound bulletSound, bool forceSound,
+                    bool forceShield) {
+
+  if (IsKeyPressed(KEY_F1)) {
+    gamepad++;
+  }
+  if (IsKeyPressed(KEY_F2)) {
+    gamepad--;
+  }
 
   checkBullet(force2, bulletSound, forceSound);
   float changeValue = checkSprint(2.0f, force);
+
+  const float deadzone = 0.1f;
+
+  if (IsGamepadAvailable(gamepad)) {
+
+    float axisX = GetGamepadAxisMovement(gamepad, GAMEPAD_AXIS_LEFT_X);
+    float axisY = GetGamepadAxisMovement(gamepad, GAMEPAD_AXIS_LEFT_Y);
+
+    if (std::abs(axisX) < deadzone)
+      axisX = 0.0f;
+    if (std::abs(axisY) < deadzone)
+      axisY = 0.0f;
+
+    axisX *= changeValue;
+    axisY *= changeValue;
+
+    player_pos.x += std::ceil(axisX);
+    player_pos.y += std::ceil(axisY);
+  }
 
   if (IsKeyDown(KEY_RIGHT) or IsKeyDown(KEY_D))
     player_pos.x += changeValue;
@@ -38,19 +70,18 @@ void player::update(bool force, bool force2, Sound bulletSound, bool forceSound,
 
   std::string assetPath;
   if (!forceShield)
-    assetPath = std::string(GetApplicationDirectory()) + "/../assets/player" + std::to_string(index) + ".png";
+    assetPath = std::string(GetApplicationDirectory()) + "/../assets/player" +
+                std::to_string(index) + ".png";
   else
-    assetPath = std::string(GetApplicationDirectory()) + "/../assets/shield-on" + std::to_string(index) + ".png";
-   
+    assetPath = std::string(GetApplicationDirectory()) +
+                "/../assets/shield-on" + std::to_string(index) + ".png";
 
   playerSprite = LoadImage(assetPath.c_str());
 
   playerTexture = LoadTextureFromImage(playerSprite);
-  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20, WHITE); 
+  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20, WHITE);
   frameCount++; // will be called every frame (60 fps)
-
 }
-
 
 float player::getCharge() { return this->charge; }
 float player::getAmmo() { return this->ammoCharge; }
@@ -73,7 +104,9 @@ void player::checkBullet(bool force, Sound bSound, bool forceSound) {
   if (force) {
     ammoCharge = 100.0f;
     if (IsKeyDown(KEY_F) or IsKeyDown(KEY_ENTER) or
-        IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        IsMouseButtonDown(MOUSE_LEFT_BUTTON) or
+        (IsGamepadAvailable(gamepad) and
+         IsGamepadButtonDown(gamepad, GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
@@ -82,7 +115,9 @@ void player::checkBullet(bool force, Sound bSound, bool forceSound) {
     }
   } else {
     if (IsKeyDown(KEY_F) or IsKeyDown(KEY_ENTER) or
-        IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        IsMouseButtonDown(MOUSE_LEFT_BUTTON) or
+        (IsGamepadAvailable(gamepad) and
+         IsGamepadButtonDown(gamepad, GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
@@ -102,7 +137,9 @@ float player::checkSprint(float changeVal, bool force) {
     changeVal += 4.0f;
     charge = 100.0f;
   } else {
-    if (IsKeyDown(KEY_LEFT_SHIFT) or IsKeyDown(KEY_RIGHT_SHIFT)) {
+    if (IsKeyDown(KEY_LEFT_SHIFT) or IsKeyDown(KEY_RIGHT_SHIFT) or
+        (IsGamepadAvailable(gamepad) and
+         IsGamepadButtonDown(gamepad, GAMEPAD_BUTTON_LEFT_TRIGGER_1))) {
       if (charge > 0) {
         changeVal += 2.0f;
         charge -= 2.0f;
@@ -130,11 +167,14 @@ void player::noCheckUpdate() {
     index = 0;
   }
 
-  std::string assetPath = std::string(GetApplicationDirectory()) + "/../assets/player" + std::to_string(index) + ".png";
+  std::string assetPath = std::string(GetApplicationDirectory()) +
+                          "/../assets/player" + std::to_string(index) + ".png";
 
   playerSprite = LoadImage(assetPath.c_str());
 
   playerTexture = LoadTextureFromImage(playerSprite);
-  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20, WHITE); 
+  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20, WHITE);
   frameCount++; // will be called every frame (60 fps)
 }
+
+int player::getGamepadId() { return this->gamepad; }
