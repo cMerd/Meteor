@@ -1,29 +1,28 @@
 #include "../inc/player.hpp"
 #include <algorithm>
 #include <cmath>
-#include <raylib.h>
 #include <string>
 
 #define XBOX360_LEGACY_NAME_ID "Xbox Controller"
 #define XBOX360_NAME_ID "Xbox 360 Controller"
 #define PS3_NAME_ID "PLAYSTATION(R)3 Controller"
 
-player::player(Vector2 playerPos, Color playerColor, int screenWidth,
-               int screenHeight) {
+player::player(raylib::Vector2 playerPos, raylib::Color playerColor,
+               int screenWidth, int screenHeight) {
   this->player_pos = playerPos;
   this->player_color = playerColor;
   this->screen_width = screenWidth;
   this->screen_height = screenHeight;
-  ammo = bullet((Rectangle){-1, -1, 20, 20}, YELLOW);
+  ammo = bullet((raylib::Rectangle){-1, -1, 20, 20}, raylib::YELLOW);
 }
 
-void player::update(bool force, bool force2, Sound bulletSound, bool forceSound,
-                    bool forceShield) {
+void player::update(bool force, bool force2, raylib::Sound bulletSound,
+                    bool forceSound, bool forceShield) {
 
-  if (IsKeyPressed(KEY_F1)) {
+  if (IsKeyPressed(raylib::KEY_F1)) {
     gamepad++;
   }
-  if (IsKeyPressed(KEY_F2)) {
+  if (IsKeyPressed(raylib::KEY_F2)) {
     gamepad--;
   }
 
@@ -32,10 +31,12 @@ void player::update(bool force, bool force2, Sound bulletSound, bool forceSound,
 
   const float deadzone = 0.1f;
 
-  if (IsGamepadAvailable(gamepad)) {
+  if (raylib::IsGamepadAvailable(gamepad)) {
 
-    float axisX = GetGamepadAxisMovement(gamepad, GAMEPAD_AXIS_LEFT_X);
-    float axisY = GetGamepadAxisMovement(gamepad, GAMEPAD_AXIS_LEFT_Y);
+    float axisX =
+        raylib::GetGamepadAxisMovement(gamepad, raylib::GAMEPAD_AXIS_LEFT_X);
+    float axisY =
+        raylib::GetGamepadAxisMovement(gamepad, raylib::GAMEPAD_AXIS_LEFT_Y);
 
     if (std::abs(axisX) < deadzone)
       axisX = 0.0f;
@@ -49,13 +50,13 @@ void player::update(bool force, bool force2, Sound bulletSound, bool forceSound,
     player_pos.y += std::ceil(axisY);
   }
 
-  if (IsKeyDown(KEY_RIGHT) or IsKeyDown(KEY_D))
+  if (IsKeyDown(raylib::KEY_RIGHT) or IsKeyDown(raylib::KEY_D))
     player_pos.x += changeValue;
-  if (IsKeyDown(KEY_LEFT) or IsKeyDown(KEY_A))
+  if (IsKeyDown(raylib::KEY_LEFT) or IsKeyDown(raylib::KEY_A))
     player_pos.x -= changeValue;
-  if (IsKeyDown(KEY_UP) or IsKeyDown(KEY_W))
+  if (IsKeyDown(raylib::KEY_UP) or IsKeyDown(raylib::KEY_W))
     player_pos.y -= changeValue;
-  if (IsKeyDown(KEY_DOWN) or IsKeyDown(KEY_S))
+  if (IsKeyDown(raylib::KEY_DOWN) or IsKeyDown(raylib::KEY_S))
     player_pos.y += changeValue;
 
   checkPosition();
@@ -70,16 +71,17 @@ void player::update(bool force, bool force2, Sound bulletSound, bool forceSound,
 
   std::string assetPath;
   if (!forceShield)
-    assetPath = std::string(GetApplicationDirectory()) + "/../assets/player" +
-                std::to_string(index) + ".png";
+    assetPath = std::string(raylib::GetApplicationDirectory()) +
+                "/../assets/player" + std::to_string(index) + ".png";
   else
-    assetPath = std::string(GetApplicationDirectory()) +
+    assetPath = std::string(raylib::GetApplicationDirectory()) +
                 "/../assets/shield-on" + std::to_string(index) + ".png";
 
-  playerSprite = LoadImage(assetPath.c_str());
+  playerSprite = raylib::LoadImage(assetPath.c_str());
 
   playerTexture = LoadTextureFromImage(playerSprite);
-  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20, WHITE);
+  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20,
+              raylib::WHITE);
   frameCount++; // will be called every frame (60 fps)
 }
 
@@ -100,28 +102,34 @@ void player::checkPosition() {
   }
 }
 
-void player::checkBullet(bool force, Sound bSound, bool forceSound) {
+void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
   if (force) {
     ammoCharge = 100.0f;
-    if (IsKeyDown(KEY_F) or IsKeyDown(KEY_ENTER) or
-        IsMouseButtonDown(MOUSE_LEFT_BUTTON) or
-        (IsGamepadAvailable(gamepad) and
-         IsGamepadButtonDown(gamepad, GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
+    if (raylib::IsKeyDown(raylib::KEY_F) or
+        raylib::IsKeyDown(raylib::KEY_ENTER) or
+        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON) or
+        (raylib::IsGamepadAvailable(gamepad) and
+         raylib::IsGamepadButtonDown(gamepad,
+                                     raylib::GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
-        ammo = bullet((Rectangle){player_pos.x, player_pos.y, 20, 20}, YELLOW);
+        ammo = bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
+                      raylib::YELLOW);
       }
     }
   } else {
-    if (IsKeyDown(KEY_F) or IsKeyDown(KEY_ENTER) or
-        IsMouseButtonDown(MOUSE_LEFT_BUTTON) or
-        (IsGamepadAvailable(gamepad) and
-         IsGamepadButtonDown(gamepad, GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
+    if (raylib::IsKeyDown(raylib::KEY_F) or
+        raylib::IsKeyDown(raylib::KEY_ENTER) or
+        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON) or
+        (raylib::IsGamepadAvailable(gamepad) and
+         raylib::IsGamepadButtonDown(gamepad,
+                                     raylib::GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
-        ammo = bullet((Rectangle){player_pos.x, player_pos.y, 20, 20}, YELLOW);
+        ammo = bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
+                      raylib::YELLOW);
         ammoCharge = 0.0f;
       }
     }
@@ -137,9 +145,11 @@ float player::checkSprint(float changeVal, bool force) {
     changeVal += 4.0f;
     charge = 100.0f;
   } else {
-    if (IsKeyDown(KEY_LEFT_SHIFT) or IsKeyDown(KEY_RIGHT_SHIFT) or
-        (IsGamepadAvailable(gamepad) and
-         IsGamepadButtonDown(gamepad, GAMEPAD_BUTTON_LEFT_TRIGGER_1))) {
+    if (raylib::IsKeyDown(raylib::KEY_LEFT_SHIFT) or
+        raylib::IsKeyDown(raylib::KEY_RIGHT_SHIFT) or
+        (raylib::IsGamepadAvailable(gamepad) and
+         raylib::IsGamepadButtonDown(gamepad,
+                                     raylib::GAMEPAD_BUTTON_LEFT_TRIGGER_1))) {
       if (charge > 0) {
         changeVal += 2.0f;
         charge -= 2.0f;
@@ -156,7 +166,7 @@ float player::checkSprint(float changeVal, bool force) {
 
 bullet *player::getBullet() { return &this->ammo; }
 
-Vector2 player::getPos() { return this->player_pos; }
+raylib::Vector2 player::getPos() { return this->player_pos; }
 
 void player::noCheckUpdate() {
   if (frameCount == 15) {
@@ -167,13 +177,14 @@ void player::noCheckUpdate() {
     index = 0;
   }
 
-  std::string assetPath = std::string(GetApplicationDirectory()) +
+  std::string assetPath = std::string(raylib::GetApplicationDirectory()) +
                           "/../assets/player" + std::to_string(index) + ".png";
 
-  playerSprite = LoadImage(assetPath.c_str());
+  playerSprite = raylib::LoadImage(assetPath.c_str());
 
-  playerTexture = LoadTextureFromImage(playerSprite);
-  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20, WHITE);
+  playerTexture = raylib::LoadTextureFromImage(playerSprite);
+  raylib::DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20,
+                      raylib::WHITE);
   frameCount++; // will be called every frame (60 fps)
 }
 

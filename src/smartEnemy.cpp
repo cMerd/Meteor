@@ -3,11 +3,11 @@
 
 smartEnemy::smartEnemy(int width, int height, float Speed)
     : enemy(width, height, Speed) {
-  Image img = LoadImage((std::string(GetApplicationDirectory()) + "/../assets/smartMeteor.png").c_str());
+  raylib::Image img = raylib::LoadImage((std::string(raylib::GetApplicationDirectory()) + "/../assets/smartMeteor.png").c_str());
   this->texture = LoadTextureFromImage(img);
 }
 
-void smartEnemy::update(Vector2 playerPos) {
+void smartEnemy::update(raylib::Vector2 playerPos) {
 
   if (playerPos.y < position.y) {
     position.y -= speed;
@@ -21,6 +21,6 @@ void smartEnemy::update(Vector2 playerPos) {
     position.x += speed;
   }
 
-  DrawTexture(texture, position.x, position.y, WHITE);
+  DrawTexture(texture, position.x, position.y, raylib::WHITE);
 }
 

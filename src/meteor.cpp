@@ -3,18 +3,8 @@
 #include <chrono>
 #include <cstdlib>
 
-#include "raylib.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#elif __linux__ || __APPLE__
-#include <pwd.h>
-#include <sys/types.h>
-#include <unistd.h>
-#endif
-
 void DrawProgressBar(int posX, int posY, int width, int height, float progress,
-                     Color barColor, Color backgroundColor) {
+                     raylib::Color barColor, raylib::Color backgroundColor) {
   DrawRectangle(posX, posY, width, height, backgroundColor);
   int barWidth = (int)(width * progress / 100);
   DrawRectangle(posX, posY, barWidth, height, barColor);
@@ -25,8 +15,6 @@ bool shouldSpawnEnemies(int frameCount) {
 }
 
 int getNewEnemyCount(int currentScore) { return currentScore / 60 + 8; }
-
-
 
 int getRandomValue() {
   auto now = std::chrono::high_resolution_clock::now();

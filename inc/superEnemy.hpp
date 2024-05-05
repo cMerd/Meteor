@@ -8,7 +8,7 @@ const int superEnemyMinHP = 0;
 class superEnemy : public enemy {
 public:
   superEnemy(int width, int height, float Speed);
-  void update(Vector2 playerPos);
+  void update(raylib::Vector2 playerPos);
   bool isDead();
   void hit();
 

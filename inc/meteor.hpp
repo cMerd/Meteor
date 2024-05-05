@@ -1,13 +1,15 @@
 #pragma once
 
-#include "raylib.h"
+namespace raylib {
+  #include "./raylib.h"
+}
 
 const int MIN_VALUE = 2;
 const int MAX_VALUE = 6;
 const double PROBABILITY_FACTOR = 0.6;
 
 void DrawProgressBar(int posX, int posY, int width, int height, float progress,
-                     Color barColor, Color backgroundColor);
+                     raylib::Color barColor, raylib::Color backgroundColor);
 
 int getRandomValue();
 int getNewEnemyCount(int currentScore);

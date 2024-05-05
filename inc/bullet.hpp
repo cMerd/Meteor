@@ -1,15 +1,17 @@
 #pragma once
 
-#include "raylib.h"
+namespace raylib {
+  #include "./raylib.h"
+};
 
 class bullet {
 public:
-  bullet(Rectangle bulletRect, Color bulletColor);
+  bullet(raylib::Rectangle bulletRect, raylib::Color bulletColor);
   bullet();
   void update();
-  Rectangle getHitbox();
+  raylib::Rectangle getHitbox();
 
 private:
-  Rectangle bullet_rect;
-  Color bullet_color;
+  raylib::Rectangle bullet_rect;
+  raylib::Color bullet_color;
 };

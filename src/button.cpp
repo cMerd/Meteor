@@ -1,9 +1,8 @@
 #include "../inc/button.hpp"
-#include <raylib.h>
 
-button::button(Rectangle buttonRectangle, Color buttonColor,
-               const std::string &text, Color textColor, int fontSize,
-               int textxPos, int textyPos, Color hoverColor) {
+button::button(raylib::Rectangle buttonRectangle, raylib::Color buttonColor,
+               const std::string &text, raylib::Color textColor, int fontSize,
+               int textxPos, int textyPos, raylib::Color hoverColor) {
   this->button_rectangle = buttonRectangle;
   if (!isHovered())
     DrawRectangleRec(this->button_rectangle, buttonColor);
@@ -13,23 +12,23 @@ button::button(Rectangle buttonRectangle, Color buttonColor,
 }
 
 button:: button(const std::string &image, const std::string &image_hover,
-         Rectangle buttonRectangle) {
+         raylib::Rectangle buttonRectangle) {
   this->button_rectangle = buttonRectangle;
-  Image btn;
+  raylib::Image btn;
   if (!isHovered()) {
-    btn = LoadImage(image.c_str());
+    btn = raylib::LoadImage(image.c_str());
   } else {
-    btn = LoadImage(image_hover.c_str());
+    btn = raylib::LoadImage(image_hover.c_str());
   }
-  Texture2D texture = LoadTextureFromImage(btn);
-  DrawTexture(texture, button_rectangle.x, button_rectangle.y, WHITE);
+  raylib::Texture2D texture = LoadTextureFromImage(btn);
+  DrawTexture(texture, button_rectangle.x, button_rectangle.y, raylib::WHITE);
 
 }
 
 bool button::isHovered() {
-  return (CheckCollisionPointRec(GetMousePosition(), this->button_rectangle));
+  return (CheckCollisionPointRec(raylib::GetMousePosition(), this->button_rectangle));
 }
 
 bool button::isClicked() {
-  return (this->isHovered() and IsMouseButtonPressed(MOUSE_BUTTON_LEFT));
+  return (this->isHovered() and IsMouseButtonPressed(raylib::MOUSE_BUTTON_LEFT));
 }

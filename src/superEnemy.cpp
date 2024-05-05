@@ -1,14 +1,16 @@
 #include "../inc/superEnemy.hpp"
-#include <raylib.h>
 #include <stdexcept>
 
 superEnemy::superEnemy(int width, int height, float Speed)
     : enemy(width, height, Speed) {
-  Image img = LoadImage((std::string(GetApplicationDirectory()) + "/../assets/superMeteor.png").c_str());
+  raylib::Image img =
+      raylib::LoadImage((std::string(raylib::GetApplicationDirectory()) +
+                         "/../assets/superMeteor.png")
+                            .c_str());
   this->texture = LoadTextureFromImage(img);
 }
 
-void superEnemy::update(Vector2 playerPos) {
+void superEnemy::update(raylib::Vector2 playerPos) {
   if (this->outOfScreen()) {
     return;
   }
@@ -19,7 +21,7 @@ void superEnemy::update(Vector2 playerPos) {
     position.y += speed;
   }
 
-  DrawTexture(texture, position.x, position.y, WHITE);
+  DrawTexture(texture, position.x, position.y, raylib::WHITE);
 }
 
 void superEnemy::hit() {
