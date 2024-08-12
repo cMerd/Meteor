@@ -189,29 +189,34 @@ int main() {
       }
 
       for (size_t i = 0; i < enemies.size(); i++) {
+      enemy_loop_continue:
         enemy &Enemy = enemies[i];
         if (Enemy.outOfScreen()) {
           enemies.erase(enemies.begin() + i);
           continue;
         }
         raylib::Rectangle enemyHitbox = Enemy.getHitbox();
-        raylib::Rectangle bulletHitBox = p.getBullet()->getHitbox();
-        if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
-            enemyHitbox.width == enemySize) {
-          currentScore += Enemy.getSpeed();
-          enemies.erase(enemies.begin() + i);
-          auto b = p.getBullet();
-          *b = bullet({-100, -100, 1, 1}, raylib::WHITE);
-          if (forceSound) {
-            int i = raylib::GetRandomValue(0, 3);
-            PlaySound(killSounds[i]);
+        // for (bullet &ammo : p.getBullet()) {
+        for (size_t j = 0; j < p.getBullet().size(); j++) {
+          bullet &ammo = p.getBullet()[j];
+          raylib::Rectangle bulletHitBox = ammo.getHitbox();
+          if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
+              enemyHitbox.width == enemySize) {
+            //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+            p.getBullet().erase(p.getBullet().begin() + j);
+            currentScore += Enemy.getSpeed() * 5;
+            enemies.erase(enemies.begin() + i);
+            if (forceSound) {
+              int audio = raylib::GetRandomValue(0, 3);
+              PlaySound(killSounds[audio]);
+            }
+            i++;
+            goto enemy_loop_continue;
+          } else if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
+                     enemyHitbox.width == planetSize) {
+            p.getBullet().erase(p.getBullet().begin() + j);
+            goto enemy_loop_continue;
           }
-          continue;
-        } else if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
-                   enemyHitbox.width == planetSize) {
-          auto b = p.getBullet();
-          *b = bullet({-100, -100, 1, 1}, raylib::WHITE);
-          continue;
         }
         if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
           if (!forceShield) {
@@ -234,28 +239,28 @@ int main() {
       }
 
       for (size_t i = 0; i < superEnemies.size(); i++) {
+      super_enemy_loop_continue:
         superEnemy &sEnemy = superEnemies[i];
         if (sEnemy.outOfScreen()) {
           superEnemies.erase(superEnemies.begin() + i);
           continue;
         }
         raylib::Rectangle enemyHitbox = sEnemy.getHitbox();
-        raylib::Rectangle bulletHitBox = p.getBullet()->getHitbox();
-        if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
-          auto b = p.getBullet();
-          *b = bullet({-100, -100, 1, 1}, raylib::WHITE);
-          sEnemy.hit();
-          if (sEnemy.isDead()) {
-            currentScore += sEnemy.getSpeed() * 3;
+        // for (bullet &ammo : p.getBullet()) {
+        for (size_t j = 0; j < p.getBullet().size(); j++) {
+          bullet &ammo = p.getBullet()[j];
+          raylib::Rectangle bulletHitBox = ammo.getHitbox();
+          if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
+            //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+            p.getBullet().erase(p.getBullet().begin() + j);
+            currentScore += sEnemy.getSpeed() * 5;
             superEnemies.erase(superEnemies.begin() + i);
             if (forceSound) {
-              int i = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[i]);
+              int audio = raylib::GetRandomValue(0, 3);
+              PlaySound(killSounds[audio]);
             }
-            continue;
+            goto super_enemy_loop_continue;
           }
-          int i = raylib::GetRandomValue(0, 3);
-          PlaySound(killSounds[i]);
         }
         if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
           if (!forceShield) {
@@ -278,23 +283,29 @@ int main() {
       }
 
       for (size_t i = 0; i < smartEnemies.size(); i++) {
+      smart_enemy_loop_continue:
         smartEnemy &smEnemy = smartEnemies[i];
         if (smEnemy.outOfScreen()) {
           smartEnemies.erase(smartEnemies.begin() + i);
           continue;
         }
         raylib::Rectangle enemyHitbox = smEnemy.getHitbox();
-        raylib::Rectangle bulletHitBox = p.getBullet()->getHitbox();
-        if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
-          auto b = p.getBullet();
-          *b = bullet({-100, -100, 1, 1}, raylib::WHITE);
-          currentScore += smEnemy.getSpeed() * 5;
-          smartEnemies.erase(smartEnemies.begin() + i);
-          if (forceSound) {
-            int i = raylib::GetRandomValue(0, 3);
-            PlaySound(killSounds[i]);
+        // for (bullet &ammo : p.getBullet()) {
+        for (size_t j = 0; j < p.getBullet().size(); j++) {
+          bullet &ammo = p.getBullet()[j];
+          raylib::Rectangle bulletHitBox = ammo.getHitbox();
+          if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
+            auto b = p.getBullet();
+            //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+            p.getBullet().erase(p.getBullet().begin() + j);
+            currentScore += smEnemy.getSpeed() * 5;
+            smartEnemies.erase(smartEnemies.begin() + i);
+            if (forceSound) {
+              int audio = raylib::GetRandomValue(0, 3);
+              PlaySound(killSounds[audio]);
+            }
+            goto smart_enemy_loop_continue;
           }
-          continue;
         }
         if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
           if (!forceShield) {

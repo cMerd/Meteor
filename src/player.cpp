@@ -13,7 +13,7 @@ player::player(raylib::Vector2 playerPos, raylib::Color playerColor,
   this->player_color = playerColor;
   this->screen_width = screenWidth;
   this->screen_height = screenHeight;
-  ammo = bullet((raylib::Rectangle){-1, -1, 20, 20}, raylib::YELLOW);
+  this->ammos = {};
 }
 
 void player::update(bool force, bool force2, raylib::Sound bulletSound,
@@ -114,8 +114,9 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
-        ammo = bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
-                      raylib::YELLOW);
+        ammos.push_back(
+            bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
+                   raylib::YELLOW));
       }
     }
   } else {
@@ -128,8 +129,9 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
-        ammo = bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
-                      raylib::YELLOW);
+        ammos.push_back(
+            bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
+                   raylib::YELLOW));
         ammoCharge = 0.0f;
       }
     }
@@ -137,7 +139,9 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
       ammoCharge += 1.0f;
     }
   }
-  ammo.update();
+  for (bullet &ammo : ammos) {
+    ammo.update();
+  }
 }
 
 float player::checkSprint(float changeVal, bool force) {
@@ -164,7 +168,7 @@ float player::checkSprint(float changeVal, bool force) {
   return changeVal;
 }
 
-bullet *player::getBullet() { return &this->ammo; }
+std::vector<bullet> &player::getBullet() { return this->ammos; }
 
 raylib::Vector2 player::getPos() { return this->player_pos; }
 
