@@ -80,7 +80,7 @@ void player::update(bool force, bool force2, raylib::Sound bulletSound,
   playerSprite = raylib::LoadImage(assetPath.c_str());
 
   playerTexture = LoadTextureFromImage(playerSprite);
-  DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20,
+  DrawTexture(playerTexture, player_pos.x - 23, player_pos.y - 23,
               raylib::WHITE);
   frameCount++; // will be called every frame (60 fps)
 }
