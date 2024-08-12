@@ -1,12 +1,13 @@
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
 
 #include "../inc/button.hpp"
 #include "../inc/enemy.hpp"
 #include "../inc/meteor.hpp"
+#include "../inc/particleDestruction.hpp"
 #include "../inc/player.hpp"
 #include "../inc/powerup.hpp"
 #include "../inc/smartEnemy.hpp"
@@ -41,6 +42,7 @@ int main() {
   std::vector<powerup> ammoPowerups;
   std::vector<powerup> shieldPowerups;
   std::vector<powerup> powerups;
+  std::vector<particleDestruction> particles;
   bool forceSprint = false, forceAmmo = false, forceShield = false,
        forceSound = getData(soundOptionFilePath);
 
@@ -205,11 +207,15 @@ int main() {
             //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
             p.getBullet().erase(p.getBullet().begin() + j);
             currentScore += Enemy.getSpeed() * 5;
+            particleDestruction particle(Enemy.getPos().x, Enemy.getPos().y,
+                                         false, false);
+            particles.push_back(particle);
             enemies.erase(enemies.begin() + i);
             if (forceSound) {
               int audio = raylib::GetRandomValue(0, 3);
               PlaySound(killSounds[audio]);
             }
+
             i++;
             goto enemy_loop_continue;
           } else if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
@@ -254,6 +260,9 @@ int main() {
             //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
             p.getBullet().erase(p.getBullet().begin() + j);
             currentScore += sEnemy.getSpeed() * 5;
+            particleDestruction particle(sEnemy.getPos().x, sEnemy.getPos().y,
+                                         true, false);
+            particles.push_back(particle);
             superEnemies.erase(superEnemies.begin() + i);
             if (forceSound) {
               int audio = raylib::GetRandomValue(0, 3);
@@ -299,6 +308,9 @@ int main() {
             //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
             p.getBullet().erase(p.getBullet().begin() + j);
             currentScore += smEnemy.getSpeed() * 5;
+            particleDestruction particle(smEnemy.getPos().x, smEnemy.getPos().y,
+                                         false, true);
+            particles.push_back(particle);
             smartEnemies.erase(smartEnemies.begin() + i);
             if (forceSound) {
               int audio = raylib::GetRandomValue(0, 3);
@@ -363,6 +375,15 @@ int main() {
         powerUpFrameCounter--;
       }
 
+      for (size_t i = 0; i < particles.size(); i++) {
+        if (particles[i].IsFinished()) {
+          particles.erase(particles.begin() + i);
+          continue;
+        }
+        particles[i].Draw();
+        particles[i].Update();
+      }
+
       p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield);
       std::string scoreText = "Score: " + std::to_string(currentScore);
 
@@ -402,6 +423,7 @@ int main() {
         speedPowerups.clear();
         ammoPowerups.clear();
         shieldPowerups.clear();
+        particles.clear();
         frameCount = 0;
         currentMenu = GAME;
         currentScore = 0;
@@ -418,6 +440,7 @@ int main() {
         speedPowerups.clear();
         ammoPowerups.clear();
         shieldPowerups.clear();
+        particles.clear();
         frameCount = 0;
         currentMenu = MAIN_MENU;
         currentScore = 0;

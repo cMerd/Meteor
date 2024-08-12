@@ -53,3 +53,5 @@ enemy::enemy(int width, int height, float Speed, int enemyWidth,
   this->enemy_height = enemyHeight;
   this->enemy_width = enemyWidth;
 }
+
+raylib::Vector2 enemy::getPos() { return this->position; }
