@@ -5,6 +5,7 @@
 #include <string>
 
 #include "../inc/button.hpp"
+#include "../inc/cameraShaker.hpp"
 #include "../inc/enemy.hpp"
 #include "../inc/meteor.hpp"
 #include "../inc/particleDestruction.hpp"
@@ -45,10 +46,17 @@ int main() {
   std::vector<particleDestruction> particles;
   bool forceSprint = false, forceAmmo = false, forceShield = false,
        forceSound = getData(soundOptionFilePath);
-
   raylib::SetTraceLogLevel(raylib::LOG_NONE);
   raylib::InitWindow(screenWidth, screenHeight, "Meteor");
   raylib::InitAudioDevice();
+
+  raylib::Camera2D camera = {0};
+  camera.target = (raylib::Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
+  camera.offset = (raylib::Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
+  camera.rotation = 0.0f;
+  camera.zoom = 1.0f;
+  cameraShaker cameraController(camera);
+
   raylib::SetTargetFPS(60);
   raylib::Sound buttonSound = raylib::LoadSound(
       (std::string(raylib::GetApplicationDirectory()) + "/../assets/button.wav")
@@ -100,6 +108,7 @@ int main() {
     }
 
     raylib::BeginDrawing();
+    BeginMode2D(camera);
 
     raylib::ClearBackground(backgroundColor);
 
@@ -210,6 +219,7 @@ int main() {
             particleDestruction particle(Enemy.getPos().x, Enemy.getPos().y,
                                          false, false);
             particles.push_back(particle);
+            cameraController.start();
             enemies.erase(enemies.begin() + i);
             if (forceSound) {
               int audio = raylib::GetRandomValue(0, 3);
@@ -263,6 +273,7 @@ int main() {
             particleDestruction particle(sEnemy.getPos().x, sEnemy.getPos().y,
                                          true, false);
             particles.push_back(particle);
+            cameraController.start();
             superEnemies.erase(superEnemies.begin() + i);
             if (forceSound) {
               int audio = raylib::GetRandomValue(0, 3);
@@ -311,6 +322,7 @@ int main() {
             particleDestruction particle(smEnemy.getPos().x, smEnemy.getPos().y,
                                          false, true);
             particles.push_back(particle);
+            cameraController.start();
             smartEnemies.erase(smartEnemies.begin() + i);
             if (forceSound) {
               int audio = raylib::GetRandomValue(0, 3);
@@ -384,7 +396,14 @@ int main() {
         particles[i].Update();
       }
 
+      if (!cameraController.isFinished()) {
+        cameraController.continueShake();
+      }
+
       p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield);
+
+      raylib::EndMode2D();
+
       std::string scoreText = "Score: " + std::to_string(currentScore);
 
       DrawProgressBar(30, 30, 300, 30, p.getCharge(), raylib::BLUE,
