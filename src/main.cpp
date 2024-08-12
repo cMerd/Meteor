@@ -35,7 +35,8 @@ int main() {
 
   MENU currentMenu = MAIN_MENU;
   player p({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
-  unsigned int frameCount = 0, currentScore = 0, powerUpFrameCounter = 0;
+  unsigned int frameCount = 0, currentScore = 0, speedPowerUpFrameCounter = 0,
+               ammoPowerUpFrameCounter = 0;
   std::vector<enemy> enemies;
   std::vector<superEnemy> superEnemies;
   std::vector<smartEnemy> smartEnemies;
@@ -358,11 +359,11 @@ int main() {
           switch (Power.getType()) {
           case SPEED_POWERUP:
             forceSprint = true;
-            powerUpFrameCounter = powerupFrameCount;
+            speedPowerUpFrameCounter = powerupFrameCount;
             break;
           case AMMO_POWERUP:
             forceAmmo = true;
-            powerUpFrameCounter = powerupFrameCount;
+            ammoPowerUpFrameCounter = powerupFrameCount;
             break;
           case SHIELD_POWERUP:
             forceShield = true;
@@ -380,11 +381,16 @@ int main() {
         Power.update();
       }
 
-      if (powerUpFrameCounter == 0) {
+      if (speedPowerUpFrameCounter == 0) {
         forceSprint = false;
+      } else {
+        speedPowerUpFrameCounter--;
+      }
+
+      if (ammoPowerUpFrameCounter == 0) {
         forceAmmo = false;
       } else {
-        powerUpFrameCounter--;
+        ammoPowerUpFrameCounter--;
       }
 
       for (size_t i = 0; i < particles.size(); i++) {
@@ -411,6 +417,19 @@ int main() {
       DrawProgressBar(30, 90, 300, 30, p.getAmmo(), raylib::YELLOW,
                       raylib::WHITE);
       DrawText(scoreText.c_str(), 30, 150, 50, raylib::WHITE);
+
+      std::vector<std::pair<POWERUP, std::optional<int>>> types;
+      if (forceShield) {
+        types.push_back({SHIELD_POWERUP, {}});
+      }
+      if (forceSprint) {
+        types.push_back({SPEED_POWERUP, {speedPowerUpFrameCounter}});
+      }
+      if (forceAmmo) {
+        types.push_back({AMMO_POWERUP, {ammoPowerUpFrameCounter}});
+      }
+      DrawPowerUpSign(types, powerupFrameCount);
+
     } else if (currentMenu == GAME_OVER) {
       std::string scoreText = "Score: " + std::to_string(currentScore);
 
@@ -448,7 +467,8 @@ int main() {
         currentScore = 0;
         forceAmmo = false;
         forceSprint = false;
-        powerUpFrameCounter = 0;
+        speedPowerUpFrameCounter = 0;
+        ammoPowerUpFrameCounter = 0;
       } else if (menuButton.isClicked()) {
         if (forceSound)
           PlaySound(buttonSound);
@@ -465,7 +485,8 @@ int main() {
         currentScore = 0;
         forceAmmo = false;
         forceSprint = false;
-        powerUpFrameCounter = 0;
+        speedPowerUpFrameCounter = 0;
+        ammoPowerUpFrameCounter = 0;
       }
 
       frameCount += 1;
