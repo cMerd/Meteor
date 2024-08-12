@@ -10,8 +10,10 @@ void DrawProgressBar(int posX, int posY, int width, int height, float progress,
   DrawRectangle(posX, posY, barWidth, height, barColor);
 }
 
-bool shouldSpawnEnemies(int frameCount) {
-  return ((frameCount / 240) % 2) == 1;
+bool shouldSpawnEnemies(int frameCount, int currentScore) {
+  return ((int64_t)(frameCount /
+                    (int64_t)(240 - (double)((double)currentScore / 100))) %
+          2) == 1;
 }
 
 unsigned int getNewEnemyCount(int currentScore) {

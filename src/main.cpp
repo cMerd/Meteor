@@ -144,7 +144,7 @@ int main() {
 
       frameCount += 1;
 
-      if (shouldSpawnEnemies(frameCount)) {
+      if (shouldSpawnEnemies(frameCount, currentScore)) {
 
         for (unsigned int i = 0; i < getNewEnemyCount(currentScore); i++) {
           enemy Enemy(screenWidth, screenHeight, (float)getRandomValue());

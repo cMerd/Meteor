@@ -13,6 +13,6 @@ void DrawProgressBar(int posX, int posY, int width, int height, float progress,
 
 int getRandomValue();
 unsigned int getNewEnemyCount(int currentScore);
-bool shouldSpawnEnemies(int frameCount);
+bool shouldSpawnEnemies(int frameCount, int currentScore);
 
 enum MENU { MAIN_MENU = 0, GAME = 1, GAME_OVER = 2 };
