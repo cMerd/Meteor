@@ -412,10 +412,12 @@ int main() {
 
       std::string scoreText = "Score: " + std::to_string(currentScore);
 
-      DrawProgressBar(30, 30, 300, 30, p.getCharge(), raylib::BLUE,
-                      raylib::WHITE);
-      DrawProgressBar(30, 90, 300, 30, p.getAmmo(), raylib::YELLOW,
-                      raylib::WHITE);
+      DrawProgressBar(30, 30, 300, 30, p.getCharge(),
+                      raylib::Color{0, 121, 241, 200},
+                      raylib::Color{255, 255, 255, 150});
+      DrawProgressBar(30, 90, 300, 30, p.getAmmo(),
+                      raylib::Color{253, 249, 0, 200},
+                      raylib::Color{255, 255, 255, 150});
       DrawText(scoreText.c_str(), 30, 150, 50, raylib::WHITE);
 
       std::vector<std::pair<POWERUP, std::optional<int>>> types;
