@@ -14,7 +14,9 @@ bool shouldSpawnEnemies(int frameCount) {
   return ((frameCount / 240) % 2) == 1;
 }
 
-unsigned int getNewEnemyCount(int currentScore) { return currentScore / 60 + 8; }
+unsigned int getNewEnemyCount(int currentScore) {
+  return currentScore / 60 + 8;
+}
 
 int getRandomValue() {
   auto now = std::chrono::high_resolution_clock::now();
