@@ -6,12 +6,12 @@ namespace raylib {
 
 class bullet {
 public:
-  bullet(raylib::Rectangle bulletRect, raylib::Color bulletColor);
+  bullet(raylib::Rectangle bulletRect, raylib::Texture &bulletTexture);
   bullet();
   void update();
   raylib::Rectangle getHitbox();
 
 private:
   raylib::Rectangle bullet_rect;
-  raylib::Color bullet_color;
+  raylib::Texture2D bullet_texture;
 };

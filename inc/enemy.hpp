@@ -1,7 +1,7 @@
 #pragma once
 
 namespace raylib {
-  #include "./raylib.h"
+#include "./raylib.h"
 }
 
 const int enemySize = 30;
@@ -23,5 +23,3 @@ protected:
   float yLimit, speed;
   int enemy_width = enemySize, enemy_height = enemySize;
 };
-
-

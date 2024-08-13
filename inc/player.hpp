@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bullet.hpp"
+#include <array>
 #include <vector>
 
 class player {
@@ -15,6 +16,7 @@ public:
   std::vector<bullet> &getBullet();
   raylib::Vector2 getPos();
   int getGamepadId();
+  void destroy();
 
 private:
   void checkPosition();
@@ -27,7 +29,8 @@ private:
   raylib::Color player_color;
   int screen_width, screen_height;
   std::vector<bullet> ammos;
-  raylib::Image playerSprite;
-  raylib::Texture2D playerTexture;
+  raylib::Texture2D bulletTexture;
+  std::array<raylib::Texture2D, 4> playerTextures;
+  std::array<raylib::Texture2D, 4> playerwShieldTextures;
   int gamepad = 1;
 };

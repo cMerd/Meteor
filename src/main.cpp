@@ -19,30 +19,27 @@ bool setData(const std::string &filePath, int highScore);
 
 int main() {
 
-  const int screenWidth = 1000;
-  const int screenHeight = 800;
-  const int animFrameCount = 30;
-  const int powerupFrameCount = 300;
+  constexpr int screenWidth = 1000;
+  constexpr int screenHeight = 800;
+  constexpr int animFrameCount = 30;
+  constexpr int powerupFrameCount = 300;
   const std::string storageDir =
       std::string(raylib::GetApplicationDirectory()) + "/../data/";
   const std::string highScoreFilePath = storageDir + "high_score";
   const std::string soundOptionFilePath = storageDir + "sound";
-  const raylib::Color backgroundColor = {8, 8, 33, 0};
+  constexpr raylib::Color backgroundColor = {8, 8, 33, 0};
 
   if (!std::filesystem::exists(storageDir)) {
     std::filesystem::create_directory(storageDir);
   }
 
   MENU currentMenu = MAIN_MENU;
-  player p({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
   unsigned int frameCount = 0, currentScore = 0, speedPowerUpFrameCounter = 0,
-               ammoPowerUpFrameCounter = 0;
+               ammoPowerUpFrameCounter = 0,
+               highScore = getData(highScoreFilePath);
   std::vector<enemy> enemies;
   std::vector<superEnemy> superEnemies;
   std::vector<smartEnemy> smartEnemies;
-  std::vector<powerup> speedPowerups;
-  std::vector<powerup> ammoPowerups;
-  std::vector<powerup> shieldPowerups;
   std::vector<powerup> powerups;
   std::vector<particleDestruction> particles;
   bool forceSprint = false, forceAmmo = false, forceShield = false,
@@ -51,6 +48,7 @@ int main() {
   raylib::InitWindow(screenWidth, screenHeight, "Meteor");
   raylib::InitAudioDevice();
 
+  player p({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
   raylib::Camera2D camera = {0};
   camera.target = (raylib::Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
   camera.offset = (raylib::Vector2){screenWidth / 2.0f, screenHeight / 2.0f};
@@ -59,6 +57,25 @@ int main() {
   cameraShaker cameraController(camera);
 
   raylib::SetTargetFPS(60);
+  button startButton((raylib::Rectangle){300, 500, 400, 100}, raylib::BLACK,
+                     "Start", raylib::RAYWHITE, 60, 400, 525, raylib::RED);
+  button quitButton((raylib::Rectangle){300, 620, 400, 100}, raylib::BLACK,
+                    "Quit", raylib::RAYWHITE, 60, 420, 645, raylib::RED);
+  button soundButton(
+      (forceSound ? std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/sound-on.png"
+                  : std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/sound-off.png"),
+      (forceSound ? std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/sound-on-hover.png"
+                  : std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/sound-off-hover.png"),
+      (raylib::Rectangle){50, 720, 50, 50});
+  button retryButton((raylib::Rectangle){300, 500, 400, 100}, raylib::BLACK,
+                     "Retry", raylib::RAYWHITE, 60, 390, 525, raylib::RED);
+  button menuButton((raylib::Rectangle){300, 620, 400, 100}, raylib::BLACK,
+                    "Go to menu", raylib::RAYWHITE, 60, 350, 645, raylib::RED);
+
   raylib::Sound buttonSound = raylib::LoadSound(
       (std::string(raylib::GetApplicationDirectory()) + "/../assets/button.wav")
           .c_str());
@@ -115,28 +132,17 @@ int main() {
 
     if (currentMenu == MAIN_MENU) {
 
-      std::string highScoreText =
-          "High Score: " + std::to_string(getData(highScoreFilePath));
+      const std::string highScoreText =
+          "High Score: " + std::to_string(highScore);
 
       DrawText("Meteor", 350, 200, 80, raylib::WHITE);
       for (int i = 280; i <= 285; i++)
         DrawLine(300, i, 700, i, raylib::RED);
       DrawText(highScoreText.c_str(), 50, 50, 50, raylib::WHITE);
 
-      button startButton((raylib::Rectangle){300, 500, 400, 100}, raylib::BLACK,
-                         "Start", raylib::RAYWHITE, 60, 400, 525, raylib::RED);
-      button quitButton((raylib::Rectangle){300, 620, 400, 100}, raylib::BLACK,
-                        "Quit", raylib::RAYWHITE, 60, 420, 645, raylib::RED);
-      button soundButton(
-          (forceSound ? std::string(raylib::GetApplicationDirectory()) +
-                            "/../assets/sound-on.png"
-                      : std::string(raylib::GetApplicationDirectory()) +
-                            "/../assets/sound-off.png"),
-          (forceSound ? std::string(raylib::GetApplicationDirectory()) +
-                            "/../assets/sound-on-hover.png"
-                      : std::string(raylib::GetApplicationDirectory()) +
-                            "/../assets/sound-off-hover.png"),
-          (raylib::Rectangle){50, 720, 50, 50});
+      startButton.draw();
+      quitButton.draw();
+      soundButton.draw();
 
       if (startButton.isClicked()) {
         if (forceSound) {
@@ -147,6 +153,15 @@ int main() {
         break;
       } else if (soundButton.isClicked()) {
         forceSound = !forceSound;
+        soundButton.changeImage(
+            (forceSound ? std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/sound-on.png"
+                        : std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/sound-off.png"),
+            (forceSound ? std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/sound-on-hover.png"
+                        : std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/sound-off-hover.png"));
         if (forceSound) {
           raylib::PlayMusicStream(backgroundMusic);
         }
@@ -154,47 +169,41 @@ int main() {
       }
     } else if (currentMenu == GAME) {
 
-      frameCount += 1;
+      frameCount++;
 
       if (shouldSpawnEnemies(frameCount, currentScore)) {
 
         for (unsigned int i = 0; i < getNewEnemyCount(currentScore); i++) {
-          enemy Enemy(screenWidth, screenHeight, (float)getRandomValue());
-          enemies.push_back(Enemy);
+          enemies.push_back(
+              enemy(screenWidth, screenHeight, (float)getRandomValue()));
         }
 
         int key = raylib::GetRandomValue(1, 10);
         if (key == 7 or key == 1 or key == 9) {
-          enemy Planet(screenWidth, screenHeight, 3, planetSize, planetSize);
-          enemies.push_back(Planet);
+          enemies.push_back(
+              enemy(screenWidth, screenHeight, 3, planetSize, planetSize));
         }
 
         key = raylib::GetRandomValue(1, 5);
         if (key == 2) {
-          superEnemy sEnemy(screenWidth, screenHeight, (float)getRandomValue());
-          superEnemies.push_back(sEnemy);
+          superEnemies.push_back(
+              superEnemy(screenWidth, screenHeight, (float)getRandomValue()));
         }
 
         key = raylib::GetRandomValue(1, 10);
         if (key == 5) {
-          smartEnemy smEnemy(screenWidth, screenHeight,
-                             raylib::GetRandomValue(3, 4));
-          smartEnemies.push_back(smEnemy);
+          smartEnemies.push_back(smartEnemy(screenWidth, screenHeight,
+                                            raylib::GetRandomValue(3, 4)));
         }
 
         key = raylib::GetRandomValue(1, 20);
         if (key == 5) {
-          powerup Power(screenWidth, screenHeight, SPEED_POWERUP);
-          // speedPowerups.push_back(Power);
-          powerups.push_back(Power);
+          powerups.push_back(powerup(screenWidth, screenHeight, SPEED_POWERUP));
         } else if (key == 6) {
-          powerup Power(screenWidth, screenHeight, AMMO_POWERUP);
-          powerups.push_back(Power);
-          // ammoPowerups.push_back(Power);
+          powerups.push_back(powerup(screenWidth, screenHeight, AMMO_POWERUP));
         } else if (key == 1) {
-          powerup Power(screenWidth, screenHeight, SHIELD_POWERUP);
-          powerups.push_back(Power);
-          // shieldPowerups.push_back(Power);
+          powerups.push_back(
+              powerup(screenWidth, screenHeight, SHIELD_POWERUP));
         }
 
         frameCount = 0;
@@ -223,8 +232,7 @@ int main() {
             cameraController.start();
             enemies.erase(enemies.begin() + i);
             if (forceSound) {
-              int audio = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[audio]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
 
             i++;
@@ -238,15 +246,15 @@ int main() {
         if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
           if (!forceShield) {
             if (forceSound) {
-              int i = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[i]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             frameCount = 0;
             currentMenu = GAME_OVER;
+            highScore = std::max(highScore, currentScore);
+            setData(highScoreFilePath, highScore);
           } else {
             if (forceSound) {
-              int i = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[i]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             forceShield = false;
             enemies.erase(enemies.begin() + i);
@@ -277,8 +285,7 @@ int main() {
             cameraController.start();
             superEnemies.erase(superEnemies.begin() + i);
             if (forceSound) {
-              int audio = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[audio]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             goto super_enemy_loop_continue;
           }
@@ -286,15 +293,15 @@ int main() {
         if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
           if (!forceShield) {
             if (forceSound) {
-              int i = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[i]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             frameCount = 0;
             currentMenu = GAME_OVER;
+            highScore = std::max(highScore, currentScore);
+            setData(highScoreFilePath, highScore);
           } else {
             if (forceSound) {
-              int i = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[i]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             forceShield = false;
             superEnemies.erase(superEnemies.begin() + i);
@@ -326,8 +333,7 @@ int main() {
             cameraController.start();
             smartEnemies.erase(smartEnemies.begin() + i);
             if (forceSound) {
-              int audio = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[audio]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             goto smart_enemy_loop_continue;
           }
@@ -335,15 +341,15 @@ int main() {
         if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
           if (!forceShield) {
             if (forceSound) {
-              int i = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[i]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             frameCount = 0;
             currentMenu = GAME_OVER;
+            highScore = std::max(highScore, currentScore);
+            setData(highScoreFilePath, highScore);
           } else {
             if (forceSound) {
-              int i = raylib::GetRandomValue(0, 3);
-              PlaySound(killSounds[i]);
+              PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             smartEnemies.erase(smartEnemies.begin() + i);
             forceShield = false;
@@ -373,8 +379,7 @@ int main() {
           }
           powerups.erase(powerups.begin() + i);
           if (forceSound) {
-            int soundEffectId = raylib::GetRandomValue(0, 1);
-            PlaySound(powerUpSounds[soundEffectId]);
+            PlaySound(powerUpSounds[raylib::GetRandomValue(0, 1)]);
           }
           continue;
         }
@@ -410,7 +415,7 @@ int main() {
 
       raylib::EndMode2D();
 
-      std::string scoreText = "Score: " + std::to_string(currentScore);
+      const std::string scoreText = "Score: " + std::to_string(currentScore);
 
       DrawProgressBar(30, 30, 300, 30, p.getCharge(),
                       raylib::Color{0, 121, 241, 200},
@@ -434,12 +439,7 @@ int main() {
 
     } else if (currentMenu == GAME_OVER) {
       std::string scoreText = "Score: " + std::to_string(currentScore);
-
-      unsigned int highScore = getData(highScoreFilePath);
-      highScore = std::max(highScore, currentScore);
       std::string highScoreText = "High Score: " + std::to_string(highScore);
-
-      setData(highScoreFilePath, highScore);
 
       DrawText("Game Over!", 300, 200, 80, raylib::WHITE);
       for (int i = 280; i <= 285; i++)
@@ -447,11 +447,8 @@ int main() {
       DrawText(scoreText.c_str(), 30, 50, 50, raylib::WHITE);
       DrawText(highScoreText.c_str(), 30, 100, 50, raylib::WHITE);
 
-      button retryButton((raylib::Rectangle){300, 500, 400, 100}, raylib::BLACK,
-                         "Retry", raylib::RAYWHITE, 60, 390, 525, raylib::RED);
-      button menuButton((raylib::Rectangle){300, 620, 400, 100}, raylib::BLACK,
-                        "Go to menu", raylib::RAYWHITE, 60, 350, 645,
-                        raylib::RED);
+      retryButton.draw();
+      menuButton.draw();
 
       if (retryButton.isClicked()) {
         if (forceSound)
@@ -460,9 +457,7 @@ int main() {
         enemies.clear();
         superEnemies.clear();
         smartEnemies.clear();
-        speedPowerups.clear();
-        ammoPowerups.clear();
-        shieldPowerups.clear();
+        powerups.clear();
         particles.clear();
         frameCount = 0;
         currentMenu = GAME;
@@ -478,9 +473,7 @@ int main() {
         enemies.clear();
         superEnemies.clear();
         smartEnemies.clear();
-        speedPowerups.clear();
-        ammoPowerups.clear();
-        shieldPowerups.clear();
+        powerups.clear();
         particles.clear();
         frameCount = 0;
         currentMenu = MAIN_MENU;
@@ -502,6 +495,7 @@ int main() {
     raylib::EndDrawing();
   }
 
+  p.destroy();
   raylib::UnloadSound(buttonSound);
   raylib::UnloadSound(bulletSound);
   for (int i = 0; i < 4; i++) {

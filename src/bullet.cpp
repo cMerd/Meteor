@@ -1,9 +1,8 @@
 #include "../inc/bullet.hpp"
-#include <string>
 
-bullet::bullet(raylib::Rectangle bulletRect, raylib::Color bulletColor) {
+bullet::bullet(raylib::Rectangle bulletRect, raylib::Texture2D &bulletTexture) {
   this->bullet_rect = bulletRect;
-  this->bullet_color = bulletColor;
+  this->bullet_texture = bulletTexture;
 }
 
 bullet::bullet() {}
@@ -11,12 +10,7 @@ bullet::bullet() {}
 void bullet::update() {
   bullet_rect.y -= 10.0f;
   if (bullet_rect.y > 0) {
-    const std::string imagePath =
-        std::string(raylib::GetApplicationDirectory()) +
-        "/../assets/bullet.png";
-    raylib::Image img = raylib::LoadImage(imagePath.c_str());
-    raylib::Texture2D texture = LoadTextureFromImage(img);
-    DrawTexture(texture, bullet_rect.x, bullet_rect.y, raylib::WHITE);
+    DrawTexture(bullet_texture, bullet_rect.x, bullet_rect.y, raylib::WHITE);
   }
 }
 

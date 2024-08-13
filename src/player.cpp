@@ -3,10 +3,6 @@
 #include <cmath>
 #include <string>
 
-#define XBOX360_LEGACY_NAME_ID "Xbox Controller"
-#define XBOX360_NAME_ID "Xbox 360 Controller"
-#define PS3_NAME_ID "PLAYSTATION(R)3 Controller"
-
 player::player(raylib::Vector2 playerPos, raylib::Color playerColor,
                int screenWidth, int screenHeight) {
   this->player_pos = playerPos;
@@ -14,6 +10,31 @@ player::player(raylib::Vector2 playerPos, raylib::Color playerColor,
   this->screen_width = screenWidth;
   this->screen_height = screenHeight;
   this->ammos = {};
+  for (int i = 0; i < playerTextures.size(); i++) {
+    playerTextures[i] =
+        raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                             "../assets/player" + std::to_string(i) + ".png")
+                                .c_str());
+  }
+  for (int i = 0; i < playerwShieldTextures.size(); i++) {
+    playerwShieldTextures[i] =
+        raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                             "../assets/shield-on" + std::to_string(i) + ".png")
+                                .c_str());
+  }
+  bulletTexture = raylib::LoadTexture(
+      (std::string(raylib::GetApplicationDirectory()) + "/../assets/bullet.png")
+          .c_str());
+}
+
+void player::destroy() {
+  for (size_t i = 0; i < playerTextures.size(); i++) {
+    raylib::UnloadTexture(playerTextures[i]);
+  }
+  for (size_t i = 0; i < playerwShieldTextures.size(); i++) {
+    raylib::UnloadTexture(playerwShieldTextures[i]);
+  }
+  raylib::UnloadTexture(bulletTexture);
 }
 
 void player::update(bool force, bool force2, raylib::Sound bulletSound,
@@ -69,19 +90,9 @@ void player::update(bool force, bool force2, raylib::Sound bulletSound,
     index = 0;
   }
 
-  std::string assetPath;
-  if (!forceShield)
-    assetPath = std::string(raylib::GetApplicationDirectory()) +
-                "/../assets/player" + std::to_string(index) + ".png";
-  else
-    assetPath = std::string(raylib::GetApplicationDirectory()) +
-                "/../assets/shield-on" + std::to_string(index) + ".png";
-
-  playerSprite = raylib::LoadImage(assetPath.c_str());
-
-  playerTexture = LoadTextureFromImage(playerSprite);
-  DrawTexture(playerTexture, player_pos.x - 23, player_pos.y - 23,
-              raylib::WHITE);
+  DrawTexture(
+      (forceShield ? playerwShieldTextures[index] : playerTextures[index]),
+      player_pos.x - 23, player_pos.y - 23, raylib::WHITE);
   frameCount++; // will be called every frame (60 fps)
 }
 
@@ -116,7 +127,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
           PlaySound(bSound);
         ammos.push_back(
             bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
-                   raylib::YELLOW));
+                   bulletTexture));
       }
     }
   } else {
@@ -131,7 +142,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
           PlaySound(bSound);
         ammos.push_back(
             bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
-                   raylib::YELLOW));
+                   bulletTexture));
         ammoCharge = 0.0f;
       }
     }
@@ -181,14 +192,8 @@ void player::noCheckUpdate() {
     index = 0;
   }
 
-  std::string assetPath = std::string(raylib::GetApplicationDirectory()) +
-                          "/../assets/player" + std::to_string(index) + ".png";
-
-  playerSprite = raylib::LoadImage(assetPath.c_str());
-
-  playerTexture = raylib::LoadTextureFromImage(playerSprite);
-  raylib::DrawTexture(playerTexture, player_pos.x - 20, player_pos.y - 20,
-                      raylib::WHITE);
+  raylib::DrawTexture(playerTextures[index], player_pos.x - 20,
+                      player_pos.y - 20, raylib::WHITE);
   frameCount++; // will be called every frame (60 fps)
 }
 

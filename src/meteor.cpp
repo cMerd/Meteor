@@ -2,15 +2,13 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
 void DrawProgressBar(int posX, int posY, int width, int height, float progress,
                      raylib::Color barColor, raylib::Color backgroundColor) {
   DrawRectangle(posX, posY, width, height, backgroundColor);
-  int barWidth = (int)(width * progress / 100);
-  DrawRectangle(posX, posY, barWidth, height, barColor);
+  DrawRectangle(posX, posY, (int)(width * progress / 100), height, barColor);
 }
 
 bool shouldSpawnEnemies(int frameCount, int currentScore) {
