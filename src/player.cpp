@@ -10,13 +10,13 @@ player::player(raylib::Vector2 playerPos, raylib::Color playerColor,
   this->screen_width = screenWidth;
   this->screen_height = screenHeight;
   this->ammos = {};
-  for (int i = 0; i < playerTextures.size(); i++) {
+  for (size_t i = 0; i < playerTextures.size(); i++) {
     playerTextures[i] =
         raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
                              "../assets/player" + std::to_string(i) + ".png")
                                 .c_str());
   }
-  for (int i = 0; i < playerwShieldTextures.size(); i++) {
+  for (size_t i = 0; i < playerwShieldTextures.size(); i++) {
     playerwShieldTextures[i] =
         raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
                              "../assets/shield-on" + std::to_string(i) + ".png")
@@ -115,7 +115,9 @@ void player::checkPosition() {
 
 void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
   if (force) {
-    ammoCharge = 100.0f;
+    if (ammoCharge < 100.0f) {
+      ammoCharge += 25.0f;
+    }
     if (raylib::IsKeyDown(raylib::KEY_F) or
         raylib::IsKeyDown(raylib::KEY_ENTER) or
         raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON) or
@@ -128,6 +130,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
         ammos.push_back(
             bullet((raylib::Rectangle){player_pos.x, player_pos.y, 20, 20},
                    bulletTexture));
+        ammoCharge = 0.0f;
       }
     }
   } else {
