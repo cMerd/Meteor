@@ -64,3 +64,5 @@ void button::draw() {
   }
   drawImage();
 }
+
+void button::changeText(const std::string &text) { this->btn_text = text; }

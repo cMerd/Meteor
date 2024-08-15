@@ -16,6 +16,8 @@ const double PROBABILITY_FACTOR = 0.6;
 void DrawProgressBar(int posX, int posY, int width, int height, float progress,
                      raylib::Color barColor, raylib::Color backgroundColor);
 
+void DrawLevelBar(int level);
+
 void DrawPowerUpSign(
     const std::vector<std::pair<POWERUP, std::optional<int>>> &types,
     int maxTime);
@@ -24,4 +26,18 @@ int getRandomValue();
 unsigned int getNewEnemyCount(int currentScore);
 bool shouldSpawnEnemies(int frameCount, int currentScore);
 
-enum MENU { MAIN_MENU = 0, GAME = 1, GAME_OVER = 2 };
+enum MENU {
+  MAIN_MENU = 0,
+  GAME = 1,
+  GAME_OVER = 2,
+  SHOP_MENU = 3,
+  SPEED_UPGRADE_MENU = 4,
+  AMMO_UPGRADE_MENU = 5,
+  SHIELD_UPGRADE_MENU = 6
+};
+
+struct powerUpgrades {
+  int speedLevel;
+  int ammoLevel;
+  int shieldLevel;
+};

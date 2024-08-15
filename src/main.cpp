@@ -23,10 +23,13 @@ int main() {
   constexpr int screenHeight = 800;
   constexpr int animFrameCount = 30;
   constexpr int powerupFrameCount = 300;
+  constexpr int powerupExtraFrameCount = 600;
   const std::string storageDir =
       std::string(raylib::GetApplicationDirectory()) + "/../data/";
   const std::string highScoreFilePath = storageDir + "high_score";
   const std::string soundOptionFilePath = storageDir + "sound";
+  const std::string coinNumberFilePath = storageDir + "coins";
+  const std::string levelFilePath = storageDir + "upgrades";
   constexpr raylib::Color backgroundColor = {8, 8, 33, 0};
 
   if (!std::filesystem::exists(storageDir)) {
@@ -36,7 +39,9 @@ int main() {
   MENU currentMenu = MAIN_MENU;
   unsigned int frameCount = 0, currentScore = 0, speedPowerUpFrameCounter = 0,
                ammoPowerUpFrameCounter = 0,
-               highScore = getData(highScoreFilePath);
+               highScore = getData(highScoreFilePath),
+               coins = getData(coinNumberFilePath), coinsEarned = 0;
+  bool shieldWasted = false;
   std::vector<enemy> enemies;
   std::vector<superEnemy> superEnemies;
   std::vector<smartEnemy> smartEnemies;
@@ -56,11 +61,25 @@ int main() {
   camera.zoom = 1.0f;
   cameraShaker cameraController(camera);
 
+  powerUpgrades levels;
+  int levelData = getData(levelFilePath);
+  levels.shieldLevel = levelData % 10;
+  levels.ammoLevel = (levelData / 10) % 10;
+  levels.speedLevel = levelData / 100;
+
   raylib::SetTargetFPS(60);
-  button startButton((raylib::Rectangle){300, 500, 400, 100}, raylib::BLACK,
-                     "Start", raylib::RAYWHITE, 60, 400, 525, raylib::RED);
-  button quitButton((raylib::Rectangle){300, 620, 400, 100}, raylib::BLACK,
-                    "Quit", raylib::RAYWHITE, 60, 420, 645, raylib::RED);
+  button startButton((raylib::Rectangle){300, 400, 400, 100}, raylib::BLACK,
+                     "Start", raylib::RAYWHITE, 60, 400, 425, raylib::RED);
+  button quitButton((raylib::Rectangle){300, 640, 400, 100}, raylib::BLACK,
+                    "Quit", raylib::RAYWHITE, 60, 420, 665, raylib::RED);
+  button shopButton((raylib::Rectangle){300, 520, 400, 100}, raylib::BLACK,
+                    "Shop", raylib::RAYWHITE, 60, 420, 545, raylib::RED);
+  button backButton((raylib::Rectangle){50, screenHeight - 100, 150, 50},
+                    raylib::BLACK, "Back", raylib::RAYWHITE, 30, 70,
+                    screenHeight - 90, raylib::RED);
+  button upgradeBackButton(
+      (raylib::Rectangle){800, screenHeight - 100, 150, 50}, raylib::BLACK,
+      "Back", raylib::RAYWHITE, 30, 820, screenHeight - 90, raylib::RED);
   button soundButton(
       (forceSound ? std::string(raylib::GetApplicationDirectory()) +
                         "/../assets/sound-on.png"
@@ -75,6 +94,38 @@ int main() {
                      "Retry", raylib::RAYWHITE, 60, 390, 525, raylib::RED);
   button menuButton((raylib::Rectangle){300, 620, 400, 100}, raylib::BLACK,
                     "Go to menu", raylib::RAYWHITE, 60, 350, 645, raylib::RED);
+
+  button speedPowerupButton((raylib::Rectangle){100, 150, 200, 200},
+                            raylib::Color{0, 12, 102, 255}, "", raylib::BLANK,
+                            0, 0, 0, raylib::DARKPURPLE);
+
+  button ammoPowerupButton((raylib::Rectangle){400, 150, 200, 200},
+                           raylib::Color{0, 12, 102, 255}, "", raylib::BLANK, 0,
+                           0, 0, raylib::ORANGE);
+
+  button shieldPowerupButton((raylib::Rectangle){700, 150, 200, 200},
+                             raylib::Color{0, 12, 102, 255}, "", raylib::BLANK,
+                             0, 0, 0, raylib::BLUE);
+  button upgradeButton((raylib::Rectangle){50, 700, 200, 100}, raylib::GREEN,
+                       "Upgrade", raylib::WHITE, 40, 65, 720, raylib::LIME);
+
+  raylib::Texture2D coinIcon = raylib::LoadTexture(
+      (std::string(raylib::GetApplicationDirectory()) + "/../assets/coin.png")
+          .c_str());
+
+  raylib::Texture2D speedIcon =
+      raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                           "../assets/big_speed_icon.png")
+                              .c_str());
+
+  raylib::Texture2D ammoIcon =
+      raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                           "../assets/big_ammo_icon.png")
+                              .c_str());
+  raylib::Texture2D shieldIcon =
+      raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                           "../assets/big_shield_icon.png")
+                              .c_str());
 
   raylib::Sound buttonSound = raylib::LoadSound(
       (std::string(raylib::GetApplicationDirectory()) + "/../assets/button.wav")
@@ -141,6 +192,7 @@ int main() {
       DrawText(highScoreText.c_str(), 50, 50, 50, raylib::WHITE);
 
       startButton.draw();
+      shopButton.draw();
       quitButton.draw();
       soundButton.draw();
 
@@ -166,6 +218,11 @@ int main() {
           raylib::PlayMusicStream(backgroundMusic);
         }
         setData(soundOptionFilePath, forceSound);
+      } else if (shopButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SHOP_MENU;
       }
     } else if (currentMenu == GAME) {
 
@@ -197,11 +254,11 @@ int main() {
         }
 
         key = raylib::GetRandomValue(1, 20);
-        if (key == 5) {
+        if (key == 5 or (levels.speedLevel >= 3 and key == 18)) {
           powerups.push_back(powerup(screenWidth, screenHeight, SPEED_POWERUP));
-        } else if (key == 6) {
+        } else if (key == 6 or (levels.ammoLevel >= 3 and key == 19)) {
           powerups.push_back(powerup(screenWidth, screenHeight, AMMO_POWERUP));
-        } else if (key == 1) {
+        } else if (key == 1 or (levels.shieldLevel >= 3 and key == 20)) {
           powerups.push_back(
               powerup(screenWidth, screenHeight, SHIELD_POWERUP));
         }
@@ -231,6 +288,8 @@ int main() {
             particles.push_back(particle);
             cameraController.start();
             enemies.erase(enemies.begin() + i);
+            coins++;
+            coinsEarned++;
             if (forceSound) {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
@@ -252,11 +311,16 @@ int main() {
             currentMenu = GAME_OVER;
             highScore = std::max(highScore, currentScore);
             setData(highScoreFilePath, highScore);
+            setData(coinNumberFilePath, coins);
           } else {
             if (forceSound) {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
-            forceShield = false;
+            if (levels.shieldLevel >= 1 and !shieldWasted) {
+              shieldWasted = true;
+            } else {
+              forceShield = false;
+            }
             enemies.erase(enemies.begin() + i);
           }
         }
@@ -284,6 +348,8 @@ int main() {
             particles.push_back(particle);
             cameraController.start();
             superEnemies.erase(superEnemies.begin() + i);
+            coins += 5;
+            coinsEarned += 5;
             if (forceSound) {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
@@ -299,6 +365,7 @@ int main() {
             currentMenu = GAME_OVER;
             highScore = std::max(highScore, currentScore);
             setData(highScoreFilePath, highScore);
+            setData(coinNumberFilePath, coins);
           } else {
             if (forceSound) {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
@@ -332,6 +399,8 @@ int main() {
             particles.push_back(particle);
             cameraController.start();
             smartEnemies.erase(smartEnemies.begin() + i);
+            coins += 10;
+            coinsEarned += 10;
             if (forceSound) {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
@@ -347,6 +416,7 @@ int main() {
             currentMenu = GAME_OVER;
             highScore = std::max(highScore, currentScore);
             setData(highScoreFilePath, highScore);
+            setData(coinNumberFilePath, coins);
           } else {
             if (forceSound) {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
@@ -365,11 +435,16 @@ int main() {
           switch (Power.getType()) {
           case SPEED_POWERUP:
             forceSprint = true;
-            speedPowerUpFrameCounter = powerupFrameCount;
+            speedPowerUpFrameCounter =
+                (levels.speedLevel >= 1 ? powerupExtraFrameCount
+                                        : powerupFrameCount);
             break;
           case AMMO_POWERUP:
             forceAmmo = true;
-            ammoPowerUpFrameCounter = powerupFrameCount;
+            ammoPowerUpFrameCounter =
+                (levels.ammoLevel >= 1 ? powerupExtraFrameCount
+                                       : powerupFrameCount);
+            ;
             break;
           case SHIELD_POWERUP:
             forceShield = true;
@@ -411,7 +486,9 @@ int main() {
         cameraController.continueShake();
       }
 
-      p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield);
+      p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield,
+               (levels.speedLevel >= 2), (levels.ammoLevel >= 2),
+               (levels.shieldLevel >= 2));
 
       raylib::EndMode2D();
 
@@ -440,12 +517,17 @@ int main() {
     } else if (currentMenu == GAME_OVER) {
       std::string scoreText = "Score: " + std::to_string(currentScore);
       std::string highScoreText = "High Score: " + std::to_string(highScore);
+      std::string coinText = std::to_string(coinsEarned);
 
       DrawText("Game Over!", 300, 200, 80, raylib::WHITE);
       for (int i = 280; i <= 285; i++)
         DrawLine(280, i, 750, i, raylib::RED);
       DrawText(scoreText.c_str(), 30, 50, 50, raylib::WHITE);
       DrawText(highScoreText.c_str(), 30, 100, 50, raylib::WHITE);
+      DrawText(coinText.c_str(), 30, 180, 50, raylib::WHITE);
+      raylib::DrawTexture(coinIcon,
+                          45 + raylib::MeasureText(coinText.c_str(), 50), 165,
+                          raylib::WHITE);
 
       retryButton.draw();
       menuButton.draw();
@@ -466,6 +548,8 @@ int main() {
         forceSprint = false;
         speedPowerUpFrameCounter = 0;
         ammoPowerUpFrameCounter = 0;
+        coinsEarned = 0;
+        shieldWasted = false;
       } else if (menuButton.isClicked()) {
         if (forceSound)
           PlaySound(buttonSound);
@@ -482,6 +566,8 @@ int main() {
         forceSprint = false;
         speedPowerUpFrameCounter = 0;
         ammoPowerUpFrameCounter = 0;
+        coinsEarned = 0;
+        shieldWasted = false;
       }
 
       frameCount += 1;
@@ -490,6 +576,225 @@ int main() {
       } else if (frameCount == animFrameCount) {
         frameCount = 0;
       }
+    } else if (currentMenu == SHOP_MENU) {
+      backButton.draw();
+      if (backButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = MAIN_MENU;
+      }
+      raylib::DrawText(std::to_string(coins).c_str(), 50, 50, 50,
+                       raylib::WHITE);
+      raylib::DrawTexture(
+          coinIcon, 75 + raylib::MeasureText(std::to_string(coins).c_str(), 50),
+          30, raylib::WHITE);
+
+      speedPowerupButton.draw();
+      ammoPowerupButton.draw();
+      shieldPowerupButton.draw();
+
+      raylib::DrawTexture(speedIcon, 100, 150, raylib::WHITE);
+      raylib::DrawTexture(ammoIcon, 400, 150, raylib::WHITE);
+      raylib::DrawTexture(shieldIcon, 700, 150, raylib::WHITE);
+
+      if (speedPowerupButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SPEED_UPGRADE_MENU;
+      } else if (ammoPowerupButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = AMMO_UPGRADE_MENU;
+      } else if (shieldPowerupButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SHIELD_UPGRADE_MENU;
+      }
+    } else if (currentMenu == SPEED_UPGRADE_MENU) {
+      for (float i = 300; i <= 305; i++) {
+        raylib::DrawLine(i, 0, i, screenHeight, raylib::WHITE);
+        raylib::DrawLine(0, i, 300, i, raylib::WHITE);
+      }
+
+      raylib::DrawText("Speed Powerup", 350, 50, 50, raylib::WHITE);
+      raylib::DrawText("Makes you go faster for a few seconds", 350, 100, 30,
+                       raylib::Color{200, 200, 200, 200});
+
+      raylib::DrawTexture(speedIcon, 50, 50, raylib::WHITE);
+
+      DrawLevelBar(levels.speedLevel);
+
+      if (levels.speedLevel < 3) {
+        upgradeButton.draw();
+      }
+
+      upgradeBackButton.draw();
+      if (upgradeBackButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SHOP_MENU;
+      }
+
+      if (levels.speedLevel == 0) {
+        raylib::DrawText("For 30 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will double", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("the time of the effect", 350, 230, 30, raylib::WHITE);
+      } else if (levels.speedLevel == 1) {
+        raylib::DrawText("For 50 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will increase", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("reload speed by 1.3x", 350, 230, 30, raylib::WHITE);
+      } else if (levels.speedLevel == 2) {
+        raylib::DrawText("For 100 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will double", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("the chance of spawn", 350, 230, 30, raylib::WHITE);
+      }
+      if (upgradeButton.isClicked() and levels.speedLevel < 3) {
+        if (coins >= (levels.speedLevel == 0
+                          ? 30
+                          : (levels.speedLevel == 1 ? 50 : 100))) {
+          coins -=
+              (levels.speedLevel == 0 ? 30
+                                      : (levels.speedLevel == 1 ? 50 : 100));
+          levels.speedLevel++;
+          setData(coinNumberFilePath, coins);
+          setData(levelFilePath, levels.speedLevel * 100 +
+                                     levels.ammoLevel * 10 +
+                                     levels.shieldLevel);
+        }
+      }
+      raylib::DrawText(
+          (std::string("LVL ") + std::to_string(levels.speedLevel)).c_str(),
+          150, 360, 30, raylib::WHITE);
+
+    } else if (currentMenu == AMMO_UPGRADE_MENU) {
+
+      for (float i = 300; i <= 305; i++) {
+        raylib::DrawLine(i, 0, i, screenHeight, raylib::WHITE);
+        raylib::DrawLine(0, i, 300, i, raylib::WHITE);
+      }
+
+      raylib::DrawText("Ammo Powerup", 350, 50, 50, raylib::WHITE);
+      raylib::DrawText("Reloads ammo faster", 350, 100, 30,
+                       raylib::Color{200, 200, 200, 200});
+
+      raylib::DrawTexture(ammoIcon, 50, 50, raylib::WHITE);
+
+      DrawLevelBar(levels.ammoLevel);
+
+      if (levels.ammoLevel < 3) {
+        upgradeButton.draw();
+      }
+
+      upgradeBackButton.draw();
+      if (upgradeBackButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SHOP_MENU;
+      }
+
+      if (levels.ammoLevel == 0) {
+        raylib::DrawText("For 30 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will double", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("the time of the effect", 350, 230, 30, raylib::WHITE);
+      } else if (levels.ammoLevel == 1) {
+        raylib::DrawText("For 50 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will increase", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("reloading speed by 1.5x", 350, 230, 30,
+                         raylib::WHITE);
+      } else if (levels.ammoLevel == 2) {
+        raylib::DrawText("For 100 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will double", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("the chance of spawn", 350, 230, 30, raylib::WHITE);
+      }
+      if (upgradeButton.isClicked() and levels.ammoLevel < 3) {
+        if (coins >=
+            (levels.ammoLevel == 0 ? 30 : (levels.ammoLevel == 1 ? 50 : 100))) {
+          coins -=
+              (levels.ammoLevel == 0 ? 30 : (levels.ammoLevel == 1 ? 50 : 100));
+          levels.ammoLevel++;
+          setData(coinNumberFilePath, coins);
+          setData(levelFilePath, levels.speedLevel * 100 +
+                                     levels.ammoLevel * 10 +
+                                     levels.shieldLevel);
+        }
+      }
+      raylib::DrawText(
+          (std::string("LVL ") + std::to_string(levels.ammoLevel)).c_str(), 150,
+          360, 30, raylib::WHITE);
+
+    } else if (currentMenu == SHIELD_UPGRADE_MENU) {
+
+      for (float i = 300; i <= 305; i++) {
+        raylib::DrawLine(i, 0, i, screenHeight, raylib::WHITE);
+        raylib::DrawLine(0, i, 300, i, raylib::WHITE);
+      }
+
+      raylib::DrawText("Shield Powerup", 350, 50, 50, raylib::WHITE);
+      raylib::DrawText("Protects you from enemies", 350, 100, 30,
+                       raylib::Color{200, 200, 200, 200});
+
+      raylib::DrawTexture(shieldIcon, 50, 50, raylib::WHITE);
+
+      DrawLevelBar(levels.shieldLevel);
+
+      if (levels.shieldLevel < 3) {
+        upgradeButton.draw();
+      }
+
+      upgradeBackButton.draw();
+      if (upgradeBackButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SHOP_MENU;
+      }
+
+      if (levels.shieldLevel == 0) {
+        raylib::DrawText("For 30 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will protect", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("you from 2 hits", 350, 230, 30, raylib::WHITE);
+      } else if (levels.shieldLevel == 1) {
+        raylib::DrawText("For 50 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will reload speed 1.2x", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("faster when shield is enabled", 350, 230, 30,
+                         raylib::WHITE);
+      } else if (levels.shieldLevel == 2) {
+        raylib::DrawText("For 100 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will double", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("the chance of spawn", 350, 230, 30, raylib::WHITE);
+      }
+      if (upgradeButton.isClicked() and levels.shieldLevel < 3) {
+        if (coins >= (levels.shieldLevel == 0
+                          ? 30
+                          : (levels.shieldLevel == 1 ? 50 : 100))) {
+          coins -=
+              (levels.shieldLevel == 0 ? 30
+                                       : (levels.shieldLevel == 1 ? 50 : 100));
+          levels.shieldLevel++;
+          setData(coinNumberFilePath, coins);
+          setData(levelFilePath, levels.speedLevel * 100 +
+                                     levels.ammoLevel * 10 +
+                                     levels.shieldLevel);
+        }
+      }
+      raylib::DrawText(
+          (std::string("LVL ") + std::to_string(levels.shieldLevel)).c_str(),
+          150, 360, 30, raylib::WHITE);
     }
 
     raylib::EndDrawing();
@@ -515,8 +820,8 @@ int getData(const std::string &filePath) {
   std::string highScoreBuff;
   std::ifstream highScoreFile(filePath, std::ios::in | std::ios::out);
   if (!highScoreFile.is_open()) {
-    std::ofstream highScoreFile(filePath, std::ios::in | std::ios::out);
-    return 1;
+    std::ofstream highScoreFile(filePath);
+    return 0;
   }
   std::getline(highScoreFile, highScoreBuff);
 

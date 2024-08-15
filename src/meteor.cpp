@@ -84,3 +84,27 @@ void DrawPowerUpSign(
     xPos += 80.0f;
   }
 }
+
+void DrawLevelBar(int level) {
+  raylib::DrawRectangleRoundedLines({50, 350, 50, 201}, 0.3f, 1, 2.0f,
+                                    raylib::WHITE);
+
+  raylib::DrawRectangle(
+      50, 484, 50, 67,
+      (level >= 1 ? raylib::GREEN : raylib::Color{0, 144, 54, 158}));
+
+  raylib::DrawRectangle(
+      50, 417, 50, 67,
+      (level >= 2 ? raylib::GREEN : raylib::Color{0, 144, 54, 158}));
+
+  raylib::DrawRectangle(
+      50, 350, 50, 67,
+      (level >= 3 ? raylib::GREEN : raylib::Color{0, 144, 54, 158}));
+
+  for (float i = 1; i <= 2; i++) {
+    for (float j = 0; j <= 5; j++) {
+      raylib::DrawLine(50, 350 + i * 67 + j, 100, 350 + i * 67 + j,
+                       raylib::WHITE);
+    }
+  }
+}

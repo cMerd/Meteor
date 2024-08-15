@@ -38,7 +38,8 @@ void player::destroy() {
 }
 
 void player::update(bool force, bool force2, raylib::Sound bulletSound,
-                    bool forceSound, bool forceShield) {
+                    bool forceSound, bool forceShield, bool increaseSpeed,
+                    bool increaseAmmo, bool increaseSpeedMore) {
 
   if (IsKeyPressed(raylib::KEY_F1)) {
     gamepad++;
@@ -47,8 +48,14 @@ void player::update(bool force, bool force2, raylib::Sound bulletSound,
     gamepad--;
   }
 
-  checkBullet(force2, bulletSound, forceSound);
+  checkBullet(force2, bulletSound, forceSound, increaseAmmo);
   float changeValue = checkSprint(2.0f, force);
+  if (increaseSpeed) {
+    changeValue *= 1.3f;
+  }
+  if (increaseSpeedMore) {
+    changeValue *= 1.2f;
+  }
 
   const float deadzone = 0.1f;
 
@@ -113,10 +120,12 @@ void player::checkPosition() {
   }
 }
 
-void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound) {
+void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
+                         bool increase) {
   if (force) {
     if (ammoCharge < 100.0f) {
-      ammoCharge += 25.0f;
+      ammoCharge += 25.0f * (increase ? 1.3f : 1);
+      ammoCharge = std::min(100.0f, ammoCharge);
     }
     if (raylib::IsKeyDown(raylib::KEY_F) or
         raylib::IsKeyDown(raylib::KEY_ENTER) or

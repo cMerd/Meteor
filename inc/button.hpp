@@ -13,6 +13,7 @@ public:
   button(const std::string &image, const std::string &image_hover,
          raylib::Rectangle button_rectangle);
   void changeImage(const std::string &image, const std::string &image_hover);
+  void changeText(const std::string &text);
   void draw();
   bool isHovered();
   bool isClicked();
