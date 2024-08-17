@@ -161,6 +161,17 @@ int main() {
                                   .c_str());
   raylib::PlayMusicStream(backgroundMusic);
 
+#ifdef _METEOR_BUILD_WITH_CHEATS_
+  levels.ammoLevel = 3;
+  levels.speedLevel = 3;
+  levels.shieldLevel = 3;
+  forceAmmo = true;
+  forceSprint = true;
+  forceShield = true;
+  coins = 999999999;
+  highScore = 999999999;
+#endif
+
   while (!raylib::WindowShouldClose()) {
 
     raylib::UpdateMusicStream(backgroundMusic);
@@ -319,7 +330,9 @@ int main() {
             if (levels.shieldLevel >= 1 and !shieldWasted) {
               shieldWasted = true;
             } else {
+#ifndef _METEOR_BUILD_WITH_CHEATS_
               forceShield = false;
+#endif
             }
             enemies.erase(enemies.begin() + i);
           }
@@ -370,7 +383,9 @@ int main() {
             if (forceSound) {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
+#ifndef _METEOR_BUILD_WITH_CHEATS_
             forceShield = false;
+#endif
             superEnemies.erase(superEnemies.begin() + i);
           }
         }
@@ -422,7 +437,9 @@ int main() {
               PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
             }
             smartEnemies.erase(smartEnemies.begin() + i);
+#ifndef _METEOR_BUILD_WITH_CHEATS_
             forceShield = false;
+#endif
           }
         }
         smEnemy.update(p.getPos());
@@ -461,6 +478,7 @@ int main() {
         Power.update();
       }
 
+#ifndef _METEOR_BUILD_WITH_CHEATS_
       if (speedPowerUpFrameCounter == 0) {
         forceSprint = false;
       } else {
@@ -472,6 +490,7 @@ int main() {
       } else {
         ammoPowerUpFrameCounter--;
       }
+#endif
 
       for (size_t i = 0; i < particles.size(); i++) {
         if (particles[i].IsFinished()) {
@@ -544,10 +563,12 @@ int main() {
         frameCount = 0;
         currentMenu = GAME;
         currentScore = 0;
+#ifndef _METEOR_BUILD_WITH_CHEATS_
         forceAmmo = false;
         forceSprint = false;
         speedPowerUpFrameCounter = 0;
         ammoPowerUpFrameCounter = 0;
+#endif
         coinsEarned = 0;
         shieldWasted = false;
       } else if (menuButton.isClicked()) {
@@ -562,8 +583,10 @@ int main() {
         frameCount = 0;
         currentMenu = MAIN_MENU;
         currentScore = 0;
+#ifndef _METEOR_BUILD_WITH_CHEATS_
         forceAmmo = false;
         forceSprint = false;
+#endif
         speedPowerUpFrameCounter = 0;
         ammoPowerUpFrameCounter = 0;
         coinsEarned = 0;
