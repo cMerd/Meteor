@@ -16,7 +16,6 @@ public:
   float getAmmo();
   std::vector<bullet> &getBullet();
   raylib::Vector2 getPos();
-  int getGamepadId();
   void destroy();
 
 private:
@@ -34,5 +33,4 @@ private:
   raylib::Texture2D bulletTexture;
   std::array<raylib::Texture2D, 4> playerTextures;
   std::array<raylib::Texture2D, 4> playerwShieldTextures;
-  int gamepad = 1;
 };

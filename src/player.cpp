@@ -1,6 +1,5 @@
 #include "../inc/player.hpp"
 #include <algorithm>
-#include <cmath>
 #include <string>
 
 player::player(raylib::Vector2 playerPos, raylib::Color playerColor,
@@ -41,13 +40,6 @@ void player::update(bool force, bool force2, raylib::Sound bulletSound,
                     bool forceSound, bool forceShield, bool increaseSpeed,
                     bool increaseAmmo, bool increaseSpeedMore) {
 
-  if (IsKeyPressed(raylib::KEY_F1)) {
-    gamepad++;
-  }
-  if (IsKeyPressed(raylib::KEY_F2)) {
-    gamepad--;
-  }
-
   checkBullet(force2, bulletSound, forceSound, increaseAmmo);
   float changeValue = checkSprint(2.0f, force);
   if (increaseSpeed) {
@@ -55,27 +47,6 @@ void player::update(bool force, bool force2, raylib::Sound bulletSound,
   }
   if (increaseSpeedMore) {
     changeValue *= 1.2f;
-  }
-
-  const float deadzone = 0.1f;
-
-  if (raylib::IsGamepadAvailable(gamepad)) {
-
-    float axisX =
-        raylib::GetGamepadAxisMovement(gamepad, raylib::GAMEPAD_AXIS_LEFT_X);
-    float axisY =
-        raylib::GetGamepadAxisMovement(gamepad, raylib::GAMEPAD_AXIS_LEFT_Y);
-
-    if (std::abs(axisX) < deadzone)
-      axisX = 0.0f;
-    if (std::abs(axisY) < deadzone)
-      axisY = 0.0f;
-
-    axisX *= changeValue;
-    axisY *= changeValue;
-
-    player_pos.x += std::ceil(axisX);
-    player_pos.y += std::ceil(axisY);
   }
 
   if (IsKeyDown(raylib::KEY_RIGHT) or IsKeyDown(raylib::KEY_D))
@@ -129,10 +100,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
     }
     if (raylib::IsKeyDown(raylib::KEY_F) or
         raylib::IsKeyDown(raylib::KEY_ENTER) or
-        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON) or
-        (raylib::IsGamepadAvailable(gamepad) and
-         raylib::IsGamepadButtonDown(gamepad,
-                                     raylib::GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
+        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
@@ -145,10 +113,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
   } else {
     if (raylib::IsKeyDown(raylib::KEY_F) or
         raylib::IsKeyDown(raylib::KEY_ENTER) or
-        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON) or
-        (raylib::IsGamepadAvailable(gamepad) and
-         raylib::IsGamepadButtonDown(gamepad,
-                                     raylib::GAMEPAD_BUTTON_RIGHT_TRIGGER_1))) {
+        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
       if (ammoCharge == 100.0f) {
         if (forceSound)
           PlaySound(bSound);
@@ -173,10 +138,7 @@ float player::checkSprint(float changeVal, bool force) {
     charge = 100.0f;
   } else {
     if (raylib::IsKeyDown(raylib::KEY_LEFT_SHIFT) or
-        raylib::IsKeyDown(raylib::KEY_RIGHT_SHIFT) or
-        (raylib::IsGamepadAvailable(gamepad) and
-         raylib::IsGamepadButtonDown(gamepad,
-                                     raylib::GAMEPAD_BUTTON_LEFT_TRIGGER_1))) {
+        raylib::IsKeyDown(raylib::KEY_RIGHT_SHIFT)) {
       if (charge > 0) {
         changeVal += 2.0f;
         charge -= 2.0f;
@@ -208,5 +170,3 @@ void player::noCheckUpdate() {
                       player_pos.y - 20, raylib::WHITE);
   frameCount++; // will be called every frame (60 fps)
 }
-
-int player::getGamepadId() { return this->gamepad; }
