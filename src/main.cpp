@@ -507,7 +507,7 @@ int main() {
 
       p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield,
                (levels.speedLevel >= 2), (levels.ammoLevel >= 2),
-               (levels.shieldLevel >= 2));
+               (levels.shieldLevel >= 2 and forceShield));
 
       raylib::EndMode2D();
 
@@ -672,7 +672,7 @@ int main() {
         raylib::DrawText("For 50 coins", 80, 770, 20, raylib::YELLOW);
         raylib::DrawText("Next upgrade will increase", 350, 200, 30,
                          raylib::WHITE);
-        raylib::DrawText("reload speed by 1.3x", 350, 230, 30, raylib::WHITE);
+        raylib::DrawText("speed by 1.3x", 350, 230, 30, raylib::WHITE);
       } else if (levels.speedLevel == 2) {
         raylib::DrawText("For 100 coins", 80, 770, 20, raylib::YELLOW);
         raylib::DrawText("Next upgrade will double", 350, 200, 30,
@@ -791,7 +791,7 @@ int main() {
         raylib::DrawText("you from 2 hits", 350, 230, 30, raylib::WHITE);
       } else if (levels.shieldLevel == 1) {
         raylib::DrawText("For 50 coins", 80, 770, 20, raylib::YELLOW);
-        raylib::DrawText("Next upgrade will reload speed 1.2x", 350, 200, 30,
+        raylib::DrawText("Next upgrade will make speed 1.2x", 350, 200, 30,
                          raylib::WHITE);
         raylib::DrawText("faster when shield is enabled", 350, 230, 30,
                          raylib::WHITE);

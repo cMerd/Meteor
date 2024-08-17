@@ -18,7 +18,7 @@ bool shouldSpawnEnemies(int frameCount, int currentScore) {
 }
 
 unsigned int getNewEnemyCount(int currentScore) {
-  return currentScore / 60 + 8;
+  return currentScore / 100 + 8;
 }
 
 int getRandomValue() {

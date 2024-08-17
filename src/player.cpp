@@ -95,13 +95,13 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
                          bool increase) {
   if (force) {
     if (ammoCharge < 100.0f) {
-      ammoCharge += 25.0f * (increase ? 1.3f : 1);
+      ammoCharge += 25.0f * (increase ? 1.3f : 1.0f);
       ammoCharge = std::min(100.0f, ammoCharge);
     }
     if (raylib::IsKeyDown(raylib::KEY_F) or
         raylib::IsKeyDown(raylib::KEY_ENTER) or
         raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
-      if (ammoCharge == 100.0f) {
+      if (ammoCharge >= 100.0f) {
         if (forceSound)
           PlaySound(bSound);
         ammos.push_back(
@@ -114,7 +114,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
     if (raylib::IsKeyDown(raylib::KEY_F) or
         raylib::IsKeyDown(raylib::KEY_ENTER) or
         raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
-      if (ammoCharge == 100.0f) {
+      if (ammoCharge >= 100.0f) {
         if (forceSound)
           PlaySound(bSound);
         ammos.push_back(
@@ -125,6 +125,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
     }
     if (ammoCharge < 100.0f) {
       ammoCharge += 1.0f;
+      ammoCharge = std::min(100.0f, ammoCharge);
     }
   }
   for (bullet &ammo : ammos) {
