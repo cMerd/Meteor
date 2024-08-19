@@ -31,6 +31,7 @@ int main() {
   const std::string soundOptionFilePath = storageDir + "sound";
   const std::string coinNumberFilePath = storageDir + "coins";
   const std::string levelFilePath = storageDir + "upgrades";
+  const std::string musicOptionFilePath = storageDir + "music";
   constexpr raylib::Color backgroundColor = {8, 8, 33, 255};
 
   if (!std::filesystem::exists(storageDir)) {
@@ -51,7 +52,8 @@ int main() {
   std::vector<particleDestruction> particles;
   bool forceSprint = false, forceAmmo = false, forceShield = false,
        forceSlowMo = false, isSlowMoEnabled = (highScore >= 1000),
-       forceSound = getData(soundOptionFilePath);
+       forceSound = getData(soundOptionFilePath),
+       forceMusic = getData(musicOptionFilePath);
   raylib::SetTraceLogLevel(raylib::LOG_NONE);
   raylib::InitWindow(screenWidth, screenHeight, "Meteor");
   raylib::InitAudioDevice();
@@ -98,6 +100,16 @@ int main() {
                   : std::string(raylib::GetApplicationDirectory()) +
                         "/../assets/sound-off-hover.png"),
       (raylib::Rectangle){50, 720, 50, 50});
+  button musicButton(
+      (forceMusic ? std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/music-on.png"
+                  : std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/music-off.png"),
+      (forceMusic ? std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/music-on-hover.png"
+                  : std::string(raylib::GetApplicationDirectory()) +
+                        "/../assets/music-off-hover.png"),
+      (raylib::Rectangle){120, 720, 50, 50});
   button retryButton((raylib::Rectangle){300, 500, 400, 100}, raylib::BLACK,
                      "Retry", raylib::RAYWHITE, 60, 390, 525, raylib::RED);
   button continueButton((raylib::Rectangle){300, 500, 400, 100}, raylib::BLACK,
@@ -183,7 +195,9 @@ int main() {
       raylib::LoadMusicStream((std::string(raylib::GetApplicationDirectory()) +
                                "/../assets/backgroundMusic.wav")
                                   .c_str());
-  raylib::PlayMusicStream(backgroundMusic);
+  if (forceMusic) {
+    raylib::PlayMusicStream(backgroundMusic);
+  }
 
 #ifdef _METEOR_BUILD_WITH_CHEATS_
   levels.ammoLevel = 3;
@@ -207,12 +221,12 @@ int main() {
 
     if (raylib::GetMusicTimePlayed(backgroundMusic) >=
             raylib::GetMusicTimeLength(backgroundMusic) &&
-        forceSound) {
+        forceMusic) {
       raylib::StopMusicStream(backgroundMusic);
       raylib::PlayMusicStream(backgroundMusic);
     }
 
-    if (!forceSound) {
+    if (!forceMusic) {
       raylib::StopMusicStream(backgroundMusic);
     }
 
@@ -235,6 +249,7 @@ int main() {
       shopButton.draw();
       quitButton.draw();
       soundButton.draw();
+      musicButton.draw();
 
       if (startButton.isClicked()) {
         if (forceSound) {
@@ -254,7 +269,7 @@ int main() {
                               "/../assets/sound-on-hover.png"
                         : std::string(raylib::GetApplicationDirectory()) +
                               "/../assets/sound-off-hover.png"));
-        if (forceSound) {
+        if (forceMusic) {
           raylib::PlayMusicStream(backgroundMusic);
         }
         setData(soundOptionFilePath, forceSound);
@@ -263,6 +278,21 @@ int main() {
           raylib::PlaySound(buttonSound);
         }
         currentMenu = SHOP_MENU;
+      } else if (musicButton.isClicked()) {
+        forceMusic = !forceMusic;
+        musicButton.changeImage(
+            (forceMusic ? std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/music-on.png"
+                        : std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/music-off.png"),
+            (forceMusic ? std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/music-on-hover.png"
+                        : std::string(raylib::GetApplicationDirectory()) +
+                              "/../assets/music-off-hover.png"));
+        if (forceMusic) {
+          raylib::PlayMusicStream(backgroundMusic);
+        }
+        setData(musicOptionFilePath, forceMusic);
       }
     } else if (currentMenu == GAME) {
 
