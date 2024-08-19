@@ -7,8 +7,8 @@ bullet::bullet(raylib::Rectangle bulletRect, raylib::Texture2D &bulletTexture) {
 
 bullet::bullet() {}
 
-void bullet::update() {
-  bullet_rect.y -= 10.0f;
+void bullet::update(bool slowDown) {
+  bullet_rect.y -= (slowDown ? 6.67f : 10.0f);
   if (bullet_rect.y > 0) {
     DrawTexture(bullet_texture, bullet_rect.x, bullet_rect.y, raylib::WHITE);
   }

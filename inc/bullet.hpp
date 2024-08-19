@@ -1,14 +1,14 @@
 #pragma once
 
 namespace raylib {
-  #include "./raylib.h"
+#include "./raylib.h"
 };
 
 class bullet {
 public:
   bullet(raylib::Rectangle bulletRect, raylib::Texture &bulletTexture);
   bullet();
-  void update();
+  void update(bool slowDown);
   raylib::Rectangle getHitbox();
 
 private:

@@ -39,15 +39,21 @@ void player::destroy() {
 void player::update(bool force, bool force2, raylib::Sound bulletSound,
                     bool forceSound, bool forceShield, bool increaseSpeed,
                     bool increaseAmmo, bool increaseSpeedMore,
-                    bool reloadAmmoFaster) {
+                    bool reloadAmmoFaster, bool slowDown) {
 
   checkBullet(force2, bulletSound, forceSound, increaseAmmo, reloadAmmoFaster);
+  for (bullet &ammo : ammos) {
+    ammo.update(slowDown);
+  }
   float changeValue = checkSprint(2.0f, force);
   if (increaseSpeed) {
     changeValue *= 1.3f;
   }
   if (increaseSpeedMore) {
     changeValue *= 1.2f;
+  }
+  if (slowDown) {
+    changeValue /= 1.5f;
   }
 
   if (IsKeyDown(raylib::KEY_RIGHT) or IsKeyDown(raylib::KEY_D))
@@ -127,9 +133,6 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
       ammoCharge += 1.0f * (reloadFaster ? 1.5f : 1.0f);
       ammoCharge = std::min(100.0f, ammoCharge);
     }
-  }
-  for (bullet &ammo : ammos) {
-    ammo.update();
   }
 }
 

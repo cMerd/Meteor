@@ -589,7 +589,7 @@ int main() {
       p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield,
                (levels.speedLevel >= 2), (levels.ammoLevel >= 2),
                (levels.shieldLevel >= 2 and forceShield),
-               (levels.slowMoLevel >= 1 and forceSlowMo));
+               (levels.slowMoLevel >= 1 and forceSlowMo), forceSlowMo);
 
       raylib::EndMode2D();
 
