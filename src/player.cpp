@@ -38,9 +38,10 @@ void player::destroy() {
 
 void player::update(bool force, bool force2, raylib::Sound bulletSound,
                     bool forceSound, bool forceShield, bool increaseSpeed,
-                    bool increaseAmmo, bool increaseSpeedMore) {
+                    bool increaseAmmo, bool increaseSpeedMore,
+                    bool reloadAmmoFaster) {
 
-  checkBullet(force2, bulletSound, forceSound, increaseAmmo);
+  checkBullet(force2, bulletSound, forceSound, increaseAmmo, reloadAmmoFaster);
   float changeValue = checkSprint(2.0f, force);
   if (increaseSpeed) {
     changeValue *= 1.3f;
@@ -92,14 +93,14 @@ void player::checkPosition() {
 }
 
 void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
-                         bool increase) {
+                         bool increase, bool reloadFaster) {
   if (force) {
     if (ammoCharge < 100.0f) {
-      ammoCharge += 25.0f * (increase ? 1.3f : 1.0f);
+      ammoCharge +=
+          25.0f * (increase ? 1.3f : 1.0f) * (reloadFaster ? 1.5f : 1.0f);
       ammoCharge = std::min(100.0f, ammoCharge);
     }
-    if (raylib::IsKeyDown(raylib::KEY_F) or
-        raylib::IsKeyDown(raylib::KEY_ENTER) or
+    if (raylib::IsKeyDown(raylib::KEY_ENTER) or
         raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
       if (ammoCharge >= 100.0f) {
         if (forceSound)
@@ -111,8 +112,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
       }
     }
   } else {
-    if (raylib::IsKeyDown(raylib::KEY_F) or
-        raylib::IsKeyDown(raylib::KEY_ENTER) or
+    if (raylib::IsKeyDown(raylib::KEY_ENTER) or
         raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
       if (ammoCharge >= 100.0f) {
         if (forceSound)
@@ -124,7 +124,7 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
       }
     }
     if (ammoCharge < 100.0f) {
-      ammoCharge += 1.0f;
+      ammoCharge += 1.0f * (reloadFaster ? 1.5f : 1.0f);
       ammoCharge = std::min(100.0f, ammoCharge);
     }
   }

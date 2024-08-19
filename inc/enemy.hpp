@@ -11,7 +11,7 @@ class enemy {
 public:
   enemy(int width, int height, float Speed);
   enemy(int width, int height, float Speed, int enemyWidth, int enemyHeight);
-  void update();
+  void update(bool slowDown);
   raylib::Vector2 getPos();
   raylib::Rectangle getHitbox();
   bool outOfScreen();

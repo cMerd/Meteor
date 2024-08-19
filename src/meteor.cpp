@@ -17,8 +17,22 @@ bool shouldSpawnEnemies(int frameCount, int currentScore) {
           2) == 1;
 }
 
+bool isSlowMoStarted() { return raylib::IsKeyPressed(raylib::KEY_F); }
+
 unsigned int getNewEnemyCount(int currentScore) {
   return currentScore / 100 + 8;
+}
+
+void DrawSlowMoSign(unsigned int timeLeft, unsigned int maxTime) {
+  static raylib::Texture2D clockIcon = raylib::LoadTexture(
+      std::string((std::string(raylib::GetApplicationDirectory()) +
+                   "/../assets/clock.png"))
+          .c_str());
+  raylib::DrawTexture(clockIcon, raylib::GetScreenWidth() - 150, 50,
+                      raylib::WHITE);
+  int height = (timeLeft * 100 / maxTime);
+  raylib::DrawRectangle(raylib::GetRenderWidth() - 150, 50, 100, 100 - height,
+                        {8, 8, 33, 255});
 }
 
 int getRandomValue() {

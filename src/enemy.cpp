@@ -24,12 +24,12 @@ enemy::enemy(int width, int height, float Speed) {
 
 bool enemy::outOfScreen() { return (position.y >= yLimit); }
 
-void enemy::update() {
+void enemy::update(bool slowDown) {
   if (this->outOfScreen()) {
     return;
   }
 
-  position.y += speed;
+  position.y += (slowDown ? speed / 3.0f : speed);
   if (enemy_width != enemySize)
     DrawTexture(bigTexture, position.x, position.y, raylib::WHITE);
   else {

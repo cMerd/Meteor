@@ -10,15 +10,15 @@ superEnemy::superEnemy(int width, int height, float Speed)
   this->texture = LoadTextureFromImage(img);
 }
 
-void superEnemy::update(raylib::Vector2 playerPos) {
+void superEnemy::update(raylib::Vector2 playerPos, bool slowDown) {
   if (this->outOfScreen()) {
     return;
   }
 
   if (playerPos.y < position.y) {
-    position.y -= speed;
+    position.y -= (slowDown ? speed / 3.0f : speed);
   } else if (playerPos.y > position.y) {
-    position.y += speed;
+    position.y += (slowDown ? speed / 3.0f : speed);
   }
 
   DrawTexture(texture, position.x, position.y, raylib::WHITE);

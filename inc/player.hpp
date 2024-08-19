@@ -10,7 +10,7 @@ public:
          int screenHeight);
   void update(bool force, bool force2, raylib::Sound bulletSound,
               bool forceSound, bool forceShield, bool increaseSpeed,
-              bool increaseAmmo, bool increaseSpeedMore);
+              bool increaseAmmo, bool increaseSpeedMore, bool reloadAmmoFaster);
   void noCheckUpdate();
   float getCharge();
   float getAmmo();
@@ -21,7 +21,7 @@ public:
 private:
   void checkPosition();
   void checkBullet(bool force, raylib::Sound bSound, bool forceSound,
-                   bool increase);
+                   bool increase, bool reloadFaster);
   float checkSprint(float changeVal, bool force);
 
   int frameCount = 0, index = 0;

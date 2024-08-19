@@ -22,9 +22,13 @@ void DrawPowerUpSign(
     const std::vector<std::pair<POWERUP, std::optional<int>>> &types,
     int maxTime);
 
+void DrawSlowMoSign(unsigned int timeLeft, unsigned int maxTime);
+
 int getRandomValue();
 unsigned int getNewEnemyCount(int currentScore);
 bool shouldSpawnEnemies(int frameCount, int currentScore);
+
+bool isSlowMoStarted();
 
 enum MENU {
   MAIN_MENU = 0,
@@ -33,11 +37,13 @@ enum MENU {
   SHOP_MENU = 3,
   SPEED_UPGRADE_MENU = 4,
   AMMO_UPGRADE_MENU = 5,
-  SHIELD_UPGRADE_MENU = 6
+  SHIELD_UPGRADE_MENU = 6,
+  SLOWMO_UPGRADE_MENU = 7
 };
 
 struct powerUpgrades {
   int speedLevel;
   int ammoLevel;
   int shieldLevel;
+  int slowMoLevel;
 };

@@ -24,13 +24,14 @@ int main() {
   constexpr int animFrameCount = 30;
   constexpr int powerupFrameCount = 300;
   constexpr int powerupExtraFrameCount = 600;
+  constexpr int powerupMaxFrameCount = 1200;
   const std::string storageDir =
       std::string(raylib::GetApplicationDirectory()) + "/../data/";
   const std::string highScoreFilePath = storageDir + "high_score";
   const std::string soundOptionFilePath = storageDir + "sound";
   const std::string coinNumberFilePath = storageDir + "coins";
   const std::string levelFilePath = storageDir + "upgrades";
-  constexpr raylib::Color backgroundColor = {8, 8, 33, 0};
+  constexpr raylib::Color backgroundColor = {8, 8, 33, 255};
 
   if (!std::filesystem::exists(storageDir)) {
     std::filesystem::create_directory(storageDir);
@@ -40,7 +41,8 @@ int main() {
   unsigned int frameCount = 0, currentScore = 0, speedPowerUpFrameCounter = 0,
                ammoPowerUpFrameCounter = 0,
                highScore = getData(highScoreFilePath),
-               coins = getData(coinNumberFilePath), coinsEarned = 0;
+               coins = getData(coinNumberFilePath), coinsEarned = 0,
+               slowMoFrameCounter = 0;
   bool shieldWasted = false;
   std::vector<enemy> enemies;
   std::vector<superEnemy> superEnemies;
@@ -48,10 +50,12 @@ int main() {
   std::vector<powerup> powerups;
   std::vector<particleDestruction> particles;
   bool forceSprint = false, forceAmmo = false, forceShield = false,
+       forceSlowMo = false, isSlowMoEnabled = (highScore >= 1000),
        forceSound = getData(soundOptionFilePath);
   raylib::SetTraceLogLevel(raylib::LOG_NONE);
   raylib::InitWindow(screenWidth, screenHeight, "Meteor");
   raylib::InitAudioDevice();
+  raylib::Color circleColor = {8, 8, 33, 150};
 
   player p({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
   raylib::Camera2D camera = {0};
@@ -63,9 +67,12 @@ int main() {
 
   powerUpgrades levels;
   int levelData = getData(levelFilePath);
-  levels.shieldLevel = levelData % 10;
-  levels.ammoLevel = (levelData / 10) % 10;
-  levels.speedLevel = levelData / 100;
+  levels.slowMoLevel = levelData % 10;
+  levels.shieldLevel = (levelData / 10) % 10;
+  levels.ammoLevel = (levelData / 100) % 10;
+  levels.speedLevel = levelData / 1000;
+
+  float rad = 0;
 
   raylib::SetTargetFPS(60);
   button startButton((raylib::Rectangle){300, 400, 400, 100}, raylib::BLACK,
@@ -106,6 +113,10 @@ int main() {
   button shieldPowerupButton((raylib::Rectangle){700, 150, 200, 200},
                              raylib::Color{0, 12, 102, 255}, "", raylib::BLANK,
                              0, 0, 0, raylib::BLUE);
+
+  button slowMoPowerupButton((raylib::Rectangle){100, 400, 200, 200},
+                             raylib::Color{0, 12, 102, 255}, "", raylib::BLANK,
+                             0, 0, 0, raylib::GREEN);
   button upgradeButton((raylib::Rectangle){50, 700, 200, 100}, raylib::GREEN,
                        "Upgrade", raylib::WHITE, 40, 65, 720, raylib::LIME);
 
@@ -126,6 +137,15 @@ int main() {
       raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
                            "../assets/big_shield_icon.png")
                               .c_str());
+
+  raylib::Texture2D slowMoIcon =
+      raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                           "../assets/big_clock_icon.png")
+                              .c_str());
+
+  raylib::Texture2D lockedIcon = raylib::LoadTexture(
+      (std::string(raylib::GetApplicationDirectory()) + "../assets/locked.png")
+          .c_str());
 
   raylib::Sound buttonSound = raylib::LoadSound(
       (std::string(raylib::GetApplicationDirectory()) + "/../assets/button.wav")
@@ -165,9 +185,12 @@ int main() {
   levels.ammoLevel = 3;
   levels.speedLevel = 3;
   levels.shieldLevel = 3;
+  levels.slowMoLevel = 3;
   forceAmmo = true;
   forceSprint = true;
   forceShield = true;
+  forceSlowMo = true;
+  isSlowMoEnabled = (highScore >= 1000);
   coins = 999999999;
   highScore = 999999999;
 #endif
@@ -238,6 +261,43 @@ int main() {
     } else if (currentMenu == GAME) {
 
       frameCount++;
+
+      if (forceSlowMo) {
+        rad = (float)screenWidth / 2 *
+              (float)((float)((levels.slowMoLevel ? powerupMaxFrameCount
+                                                  : powerupExtraFrameCount) -
+                              slowMoFrameCounter) *
+                      100 /
+                      (levels.slowMoLevel ? powerupMaxFrameCount
+                                          : powerupExtraFrameCount)) /
+              100;
+
+        if (circleColor.r < raylib::DARKGRAY.r) {
+          circleColor.r++;
+        }
+        if (circleColor.g < raylib::DARKGRAY.g) {
+          circleColor.g++;
+        }
+        if (circleColor.b < raylib::DARKGRAY.b) {
+          circleColor.b++;
+        }
+
+        raylib::DrawCircle(p.getPos().x + 2.0f, p.getPos().y, rad, circleColor);
+      } else if (rad != 0) {
+        rad -= 5.0f;
+
+        if (circleColor.r > backgroundColor.r) {
+          circleColor.r--;
+        }
+        if (circleColor.g > backgroundColor.g) {
+          circleColor.g--;
+        }
+        if (circleColor.b > backgroundColor.b) {
+          circleColor.b--;
+        }
+
+        raylib::DrawCircle(p.getPos().x + 2.0f, p.getPos().y, rad, circleColor);
+      }
 
       if (shouldSpawnEnemies(frameCount, currentScore)) {
 
@@ -321,6 +381,7 @@ int main() {
             frameCount = 0;
             currentMenu = GAME_OVER;
             highScore = std::max(highScore, currentScore);
+            isSlowMoEnabled = (highScore >= 1000);
             setData(highScoreFilePath, highScore);
             setData(coinNumberFilePath, coins);
           } else {
@@ -337,7 +398,7 @@ int main() {
             enemies.erase(enemies.begin() + i);
           }
         }
-        Enemy.update();
+        Enemy.update(forceSlowMo);
       }
 
       for (size_t i = 0; i < superEnemies.size(); i++) {
@@ -377,6 +438,7 @@ int main() {
             frameCount = 0;
             currentMenu = GAME_OVER;
             highScore = std::max(highScore, currentScore);
+            isSlowMoEnabled = (highScore >= 1000);
             setData(highScoreFilePath, highScore);
             setData(coinNumberFilePath, coins);
           } else {
@@ -389,7 +451,7 @@ int main() {
             superEnemies.erase(superEnemies.begin() + i);
           }
         }
-        sEnemy.update(p.getPos());
+        sEnemy.update(p.getPos(), forceSlowMo);
       }
 
       for (size_t i = 0; i < smartEnemies.size(); i++) {
@@ -430,6 +492,7 @@ int main() {
             frameCount = 0;
             currentMenu = GAME_OVER;
             highScore = std::max(highScore, currentScore);
+            isSlowMoEnabled = (highScore >= 1000);
             setData(highScoreFilePath, highScore);
             setData(coinNumberFilePath, coins);
           } else {
@@ -442,7 +505,7 @@ int main() {
 #endif
           }
         }
-        smEnemy.update(p.getPos());
+        smEnemy.update(p.getPos(), forceSlowMo);
       }
 
       for (size_t i = 0; i < powerups.size(); i++) {
@@ -478,18 +541,36 @@ int main() {
         Power.update();
       }
 
+      if (isSlowMoEnabled and isSlowMoStarted()) {
+        forceSlowMo = !forceSlowMo;
+      }
+
 #ifndef _METEOR_BUILD_WITH_CHEATS_
       if (speedPowerUpFrameCounter == 0) {
         forceSprint = false;
-      } else {
+      } else if (forceSprint) {
         speedPowerUpFrameCounter--;
       }
 
       if (ammoPowerUpFrameCounter == 0) {
         forceAmmo = false;
-      } else {
+      } else if (forceAmmo) {
         ammoPowerUpFrameCounter--;
       }
+
+      if (slowMoFrameCounter == 0 and forceSlowMo) {
+        forceSlowMo = false;
+      } else if (forceSlowMo) {
+        slowMoFrameCounter--;
+      } else if (slowMoFrameCounter < (levels.slowMoLevel >= 3
+                                           ? (float)powerupMaxFrameCount
+                                           : (float)powerupExtraFrameCount)) {
+        slowMoFrameCounter++;
+        if (levels.slowMoLevel >= 2) {
+          slowMoFrameCounter++;
+        }
+      }
+
 #endif
 
       for (size_t i = 0; i < particles.size(); i++) {
@@ -507,7 +588,8 @@ int main() {
 
       p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield,
                (levels.speedLevel >= 2), (levels.ammoLevel >= 2),
-               (levels.shieldLevel >= 2 and forceShield));
+               (levels.shieldLevel >= 2 and forceShield),
+               (levels.slowMoLevel >= 1 and forceSlowMo));
 
       raylib::EndMode2D();
 
@@ -519,6 +601,11 @@ int main() {
       DrawProgressBar(30, 90, 300, 30, p.getAmmo(),
                       raylib::Color{253, 249, 0, 200},
                       raylib::Color{255, 255, 255, 150});
+      if (isSlowMoEnabled) {
+        DrawSlowMoSign(slowMoFrameCounter,
+                       (levels.slowMoLevel >= 3 ? powerupMaxFrameCount
+                                                : powerupExtraFrameCount));
+      }
       DrawText(scoreText.c_str(), 30, 150, 50, raylib::WHITE);
 
       std::vector<std::pair<POWERUP, std::optional<int>>> types;
@@ -566,11 +653,15 @@ int main() {
 #ifndef _METEOR_BUILD_WITH_CHEATS_
         forceAmmo = false;
         forceSprint = false;
+        forceShield = false;
+        forceSlowMo = false;
         speedPowerUpFrameCounter = 0;
         ammoPowerUpFrameCounter = 0;
+        slowMoFrameCounter = 0;
 #endif
         coinsEarned = 0;
         shieldWasted = false;
+        circleColor = {8, 8, 33, 150};
       } else if (menuButton.isClicked()) {
         if (forceSound)
           PlaySound(buttonSound);
@@ -586,11 +677,14 @@ int main() {
 #ifndef _METEOR_BUILD_WITH_CHEATS_
         forceAmmo = false;
         forceSprint = false;
-#endif
+        forceShield = false;
         speedPowerUpFrameCounter = 0;
         ammoPowerUpFrameCounter = 0;
+        slowMoFrameCounter = 0;
+#endif
         coinsEarned = 0;
         shieldWasted = false;
+        circleColor = {8, 8, 33, 150};
       }
 
       frameCount += 1;
@@ -616,10 +710,18 @@ int main() {
       speedPowerupButton.draw();
       ammoPowerupButton.draw();
       shieldPowerupButton.draw();
+      slowMoPowerupButton.draw();
 
       raylib::DrawTexture(speedIcon, 100, 150, raylib::WHITE);
       raylib::DrawTexture(ammoIcon, 400, 150, raylib::WHITE);
       raylib::DrawTexture(shieldIcon, 700, 150, raylib::WHITE);
+      raylib::DrawTexture((isSlowMoEnabled ? slowMoIcon : lockedIcon), 100, 400,
+                          raylib::WHITE);
+
+      if (slowMoPowerupButton.isHovered() and !isSlowMoEnabled) {
+        raylib::DrawText("score 1000 to unlock", 100, screenHeight - 200, 20,
+                         raylib::WHITE);
+      }
 
       if (speedPowerupButton.isClicked()) {
         if (forceSound) {
@@ -636,6 +738,11 @@ int main() {
           raylib::PlaySound(buttonSound);
         }
         currentMenu = SHIELD_UPGRADE_MENU;
+      } else if (slowMoPowerupButton.isClicked() and isSlowMoEnabled) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SLOWMO_UPGRADE_MENU;
       }
     } else if (currentMenu == SPEED_UPGRADE_MENU) {
       for (float i = 300; i <= 305; i++) {
@@ -688,9 +795,9 @@ int main() {
                                       : (levels.speedLevel == 1 ? 50 : 100));
           levels.speedLevel++;
           setData(coinNumberFilePath, coins);
-          setData(levelFilePath, levels.speedLevel * 100 +
-                                     levels.ammoLevel * 10 +
-                                     levels.shieldLevel);
+          setData(levelFilePath,
+                  levels.speedLevel * 1000 + levels.ammoLevel * 100 +
+                      levels.shieldLevel * 10 + levels.slowMoLevel);
         }
       }
       raylib::DrawText(
@@ -748,9 +855,9 @@ int main() {
               (levels.ammoLevel == 0 ? 30 : (levels.ammoLevel == 1 ? 50 : 100));
           levels.ammoLevel++;
           setData(coinNumberFilePath, coins);
-          setData(levelFilePath, levels.speedLevel * 100 +
-                                     levels.ammoLevel * 10 +
-                                     levels.shieldLevel);
+          setData(levelFilePath,
+                  levels.speedLevel * 1000 + levels.ammoLevel * 100 +
+                      levels.shieldLevel * 10 + levels.slowMoLevel);
         }
       }
       raylib::DrawText(
@@ -810,13 +917,75 @@ int main() {
                                        : (levels.shieldLevel == 1 ? 50 : 100));
           levels.shieldLevel++;
           setData(coinNumberFilePath, coins);
-          setData(levelFilePath, levels.speedLevel * 100 +
-                                     levels.ammoLevel * 10 +
-                                     levels.shieldLevel);
+          setData(levelFilePath,
+                  levels.speedLevel * 1000 + levels.ammoLevel * 100 +
+                      levels.shieldLevel * 10 + levels.slowMoLevel);
         }
       }
       raylib::DrawText(
           (std::string("LVL ") + std::to_string(levels.shieldLevel)).c_str(),
+          150, 360, 30, raylib::WHITE);
+    } else if (currentMenu == SLOWMO_UPGRADE_MENU) {
+
+      for (float i = 300; i <= 305; i++) {
+        raylib::DrawLine(i, 0, i, screenHeight, raylib::WHITE);
+        raylib::DrawLine(0, i, 300, i, raylib::WHITE);
+      }
+
+      raylib::DrawText("Slow motion", 350, 50, 50, raylib::WHITE);
+      raylib::DrawText("Slows down time (press F to use)", 350, 100, 30,
+                       raylib::Color{200, 200, 200, 200});
+
+      raylib::DrawTexture(slowMoIcon, 50, 50, raylib::WHITE);
+
+      DrawLevelBar(levels.slowMoLevel);
+
+      if (levels.slowMoLevel < 3) {
+        upgradeButton.draw();
+      }
+
+      upgradeBackButton.draw();
+      if (upgradeBackButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = SHOP_MENU;
+      }
+
+      if (levels.slowMoLevel == 0) {
+        raylib::DrawText("For 30 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will reload ammo ", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("1.5x faster on slow motion", 350, 230, 30,
+                         raylib::WHITE);
+      } else if (levels.slowMoLevel == 1) {
+        raylib::DrawText("For 50 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will reload", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("the effect 2x faster", 350, 230, 30, raylib::WHITE);
+      } else if (levels.slowMoLevel == 2) {
+        raylib::DrawText("For 100 coins", 80, 770, 20, raylib::YELLOW);
+        raylib::DrawText("Next upgrade will double", 350, 200, 30,
+                         raylib::WHITE);
+        raylib::DrawText("the max time of the effect", 350, 230, 30,
+                         raylib::WHITE);
+      }
+      if (upgradeButton.isClicked() and levels.slowMoLevel < 3) {
+        if (coins >= (levels.slowMoLevel == 0
+                          ? 30
+                          : (levels.slowMoLevel == 1 ? 50 : 100))) {
+          coins -=
+              (levels.slowMoLevel == 0 ? 30
+                                       : (levels.slowMoLevel == 1 ? 50 : 100));
+          levels.slowMoLevel++;
+          setData(coinNumberFilePath, coins);
+          setData(levelFilePath,
+                  levels.speedLevel * 1000 + levels.ammoLevel * 100 +
+                      levels.shieldLevel * 10 + levels.slowMoLevel);
+        }
+      }
+      raylib::DrawText(
+          (std::string("LVL ") + std::to_string(levels.slowMoLevel)).c_str(),
           150, 360, 30, raylib::WHITE);
     }
 
