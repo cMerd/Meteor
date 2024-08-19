@@ -196,6 +196,9 @@ int main() {
   isSlowMoEnabled = true;
   coins = 999999999;
   highScore = 999999999;
+  slowMoFrameCounter = powerupMaxFrameCount;
+  speedPowerUpFrameCounter = powerupExtraFrameCount;
+  ammoPowerUpFrameCounter = powerupExtraFrameCount;
 #endif
 
   while (!raylib::WindowShouldClose()) {
@@ -308,6 +311,7 @@ int main() {
         frameCount++;
 
         if (forceSlowMo) {
+#ifndef _METEOR_BUILD_WITH_CHEATS_
           rad = (float)screenWidth / 2 *
                 (float)((float)((levels.slowMoLevel ? powerupMaxFrameCount
                                                     : powerupExtraFrameCount) -
@@ -316,6 +320,11 @@ int main() {
                         (levels.slowMoLevel ? powerupMaxFrameCount
                                             : powerupExtraFrameCount)) /
                 100;
+#else
+          if (rad < screenWidth) {
+            rad++;
+          }
+#endif
 
           if (circleColor.r < raylib::DARKGRAY.r) {
             circleColor.r++;
