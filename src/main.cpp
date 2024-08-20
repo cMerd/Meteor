@@ -381,6 +381,7 @@ int main() {
           coinsEarned = 0;
           shieldWasted = false;
           circleColor = {8, 8, 33, 150};
+          paused = false;
         } else if (continueButton.isClicked()) {
           paused = false;
         }
@@ -810,6 +811,7 @@ int main() {
         coinsEarned = 0;
         shieldWasted = false;
         circleColor = {8, 8, 33, 150};
+        paused = false;
       } else if (menuButton.isClicked()) {
         if (forceSound)
           PlaySound(buttonSound);
@@ -833,6 +835,7 @@ int main() {
         coinsEarned = 0;
         shieldWasted = false;
         circleColor = {8, 8, 33, 150};
+        paused = false;
       }
 
       frameCount += 1;
@@ -1229,6 +1232,7 @@ int main() {
           coinsEarned = 0;
           shieldWasted = false;
           circleColor = {8, 8, 33, 150};
+          paused = false;
         } else if (continueButton.isClicked()) {
           paused = false;
         }
