@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -33,6 +35,24 @@ void DrawSlowMoSign(unsigned int timeLeft, unsigned int maxTime) {
   int height = (timeLeft * 100 / maxTime);
   raylib::DrawRectangle(raylib::GetRenderWidth() - 150, 50, 100, 100 - height,
                         {8, 8, 33, 255});
+}
+
+std::string formatTime(double seconds) {
+  int hours = static_cast<int>(seconds) / 3600;
+  int minutes = (static_cast<int>(seconds) % 3600) / 60;
+  int secs = static_cast<int>(seconds) % 60;
+  std::ostringstream oss;
+
+  if (hours > 0) {
+    oss << std::setw(2) << std::setfill('0') << hours << ':' << std::setw(2)
+        << std::setfill('0') << minutes << ':' << std::setw(2)
+        << std::setfill('0') << secs;
+  } else {
+    oss << std::setw(2) << std::setfill('0') << minutes << ':' << std::setw(2)
+        << std::setfill('0') << secs;
+  }
+
+  return oss.str();
 }
 
 int getRandomValue() {

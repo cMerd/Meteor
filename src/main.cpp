@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -74,6 +75,9 @@ int main() {
   levels.shieldLevel = (levelData / 10) % 10;
   levels.ammoLevel = (levelData / 100) % 10;
   levels.speedLevel = levelData / 1000;
+
+  auto timerStart = std::chrono::high_resolution_clock::now();
+  auto timerEnd = std::chrono::high_resolution_clock::now();
 
   float rad = 0;
 
@@ -369,6 +373,8 @@ int main() {
           particles.clear();
           frameCount = 0;
           currentMenu = MAIN_MENU;
+          timerStart = std::chrono::high_resolution_clock::now();
+          timerEnd = std::chrono::high_resolution_clock::now();
           currentScore = 0;
 #ifndef _METEOR_BUILD_WITH_CHEATS_
           forceAmmo = false;
@@ -798,6 +804,8 @@ int main() {
         particles.clear();
         frameCount = 0;
         currentMenu = GAME;
+        timerStart = std::chrono::high_resolution_clock::now();
+        timerEnd = std::chrono::high_resolution_clock::now();
         currentScore = 0;
 #ifndef _METEOR_BUILD_WITH_CHEATS_
         forceAmmo = false;
@@ -823,6 +831,8 @@ int main() {
         particles.clear();
         frameCount = 0;
         currentMenu = MAIN_MENU;
+        timerStart = std::chrono::high_resolution_clock::now();
+        timerEnd = std::chrono::high_resolution_clock::now();
         currentScore = 0;
 #ifndef _METEOR_BUILD_WITH_CHEATS_
         forceAmmo = false;
@@ -1154,6 +1164,7 @@ int main() {
           raylib::PlaySound(buttonSound);
         }
         currentMenu = TIME_RACE;
+        timerStart = std::chrono::high_resolution_clock::now();
       }
 
       tutorialButton.draw();
@@ -1194,6 +1205,509 @@ int main() {
       raylib::DrawTexture(endlessIcon, screenWidth - 250, 30, raylib::WHITE);
     } else if (currentMenu == TIME_RACE) {
 
+      timerEnd = std::chrono::high_resolution_clock::now();
+
+      if (raylib::IsKeyPressed(raylib::KEY_ESCAPE)) {
+        paused = !paused;
+      }
+
+      if (paused) {
+
+        DrawText("Paused", 350, 200, 80, raylib::WHITE);
+        for (int i = 280; i <= 285; i++)
+          DrawLine(300, i, 700, i, raylib::RED);
+
+        menuButton.draw();
+        continueButton.draw();
+
+        if (menuButton.isClicked()) {
+          if (forceSound)
+            PlaySound(buttonSound);
+          p = player({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
+          enemies.clear();
+          superEnemies.clear();
+          smartEnemies.clear();
+          powerups.clear();
+          particles.clear();
+          frameCount = 0;
+          currentMenu = MAIN_MENU;
+          timerStart = std::chrono::high_resolution_clock::now();
+          timerEnd = std::chrono::high_resolution_clock::now();
+          currentScore = 0;
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+          forceAmmo = false;
+          forceSprint = false;
+          forceShield = false;
+          speedPowerUpFrameCounter = 0;
+          ammoPowerUpFrameCounter = 0;
+          slowMoFrameCounter = 0;
+#endif
+          coinsEarned = 0;
+          shieldWasted = false;
+          circleColor = {8, 8, 33, 150};
+          paused = false;
+        } else if (continueButton.isClicked()) {
+          paused = false;
+        }
+
+      } else {
+
+        frameCount++;
+
+        if (forceSlowMo) {
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+          rad = (float)screenWidth / 2 *
+                (float)((float)((levels.slowMoLevel ? powerupMaxFrameCount
+                                                    : powerupExtraFrameCount) -
+                                slowMoFrameCounter) *
+                        100 /
+                        (levels.slowMoLevel ? powerupMaxFrameCount
+                                            : powerupExtraFrameCount)) /
+                100;
+#else
+          if (rad < screenWidth) {
+            rad++;
+          }
+#endif
+
+          if (circleColor.r < raylib::DARKGRAY.r) {
+            circleColor.r++;
+          }
+          if (circleColor.g < raylib::DARKGRAY.g) {
+            circleColor.g++;
+          }
+          if (circleColor.b < raylib::DARKGRAY.b) {
+            circleColor.b++;
+          }
+
+          raylib::DrawCircle(p.getPos().x + 2.0f, p.getPos().y, rad,
+                             circleColor);
+        } else if (rad > 0) {
+          rad -= 5.0f;
+
+          if (circleColor.r > backgroundColor.r) {
+            circleColor.r--;
+          }
+          if (circleColor.g > backgroundColor.g) {
+            circleColor.g--;
+          }
+          if (circleColor.b > backgroundColor.b) {
+            circleColor.b--;
+          }
+
+          raylib::DrawCircle(p.getPos().x + 2.0f, p.getPos().y, rad,
+                             circleColor);
+        }
+
+        if (shouldSpawnEnemies(frameCount, currentScore)) {
+
+          for (unsigned int i = 0; i < getNewEnemyCount(currentScore); i++) {
+            enemies.push_back(
+                enemy(screenWidth, screenHeight, (float)getRandomValue()));
+          }
+
+          int key = raylib::GetRandomValue(1, 10);
+          if (key == 7 or key == 1 or key == 9) {
+            enemies.push_back(
+                enemy(screenWidth, screenHeight, 3, planetSize, planetSize));
+          }
+
+          key = raylib::GetRandomValue(1, 5);
+          if (key == 2) {
+            superEnemies.push_back(
+                superEnemy(screenWidth, screenHeight, (float)getRandomValue()));
+          }
+
+          key = raylib::GetRandomValue(1, 10);
+          if (key == 5) {
+            smartEnemies.push_back(smartEnemy(screenWidth, screenHeight,
+                                              raylib::GetRandomValue(3, 4)));
+          }
+
+          key = raylib::GetRandomValue(1, 20);
+          if (key == 5 or (levels.speedLevel >= 3 and key == 18)) {
+            powerups.push_back(
+                powerup(screenWidth, screenHeight, SPEED_POWERUP));
+          } else if (key == 6 or (levels.ammoLevel >= 3 and key == 19)) {
+            powerups.push_back(
+                powerup(screenWidth, screenHeight, AMMO_POWERUP));
+          } else if (key == 1 or (levels.shieldLevel >= 3 and key == 20)) {
+            powerups.push_back(
+                powerup(screenWidth, screenHeight, SHIELD_POWERUP));
+          }
+
+          frameCount = 0;
+        }
+
+        for (size_t i = 0; i < enemies.size(); i++) {
+        enemy_loop_continue3:
+          if (i >= enemies.size()) {
+            break;
+          }
+          enemy &Enemy = enemies[i];
+          if (Enemy.outOfScreen()) {
+            enemies.erase(enemies.begin() + i);
+            continue;
+          }
+          raylib::Rectangle enemyHitbox = Enemy.getHitbox();
+          // for (bullet &ammo : p.getBullet()) {
+          for (size_t j = 0; j < p.getBullet().size(); j++) {
+            bullet &ammo = p.getBullet()[j];
+            raylib::Rectangle bulletHitBox = ammo.getHitbox();
+            if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
+                enemyHitbox.width == enemySize) {
+              //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+              p.getBullet().erase(p.getBullet().begin() + j);
+              particleDestruction particle(Enemy.getPos().x, Enemy.getPos().y,
+                                           false, false);
+              particles.push_back(particle);
+              cameraController.start();
+              enemies.erase(enemies.begin() + i);
+              coins++;
+              coinsEarned++;
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+
+              i++;
+              goto enemy_loop_continue3;
+            } else if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
+                       enemyHitbox.width == planetSize) {
+              p.getBullet().erase(p.getBullet().begin() + j);
+              goto enemy_loop_continue3;
+            }
+          }
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
+            if (!forceShield) {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              frameCount = 0;
+              currentMenu = RACE_OVER;
+              setData(coinNumberFilePath, coins);
+            } else {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              if (levels.shieldLevel >= 1 and !shieldWasted) {
+                shieldWasted = true;
+              } else {
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+                forceShield = false;
+#endif
+              }
+              enemies.erase(enemies.begin() + i);
+            }
+          }
+          Enemy.update(forceSlowMo);
+        }
+
+        for (size_t i = 0; i < superEnemies.size(); i++) {
+        super_enemy_loop_continue3:
+          if (i >= superEnemies.size()) {
+            break;
+          }
+
+          superEnemy &sEnemy = superEnemies[i];
+          if (sEnemy.outOfScreen()) {
+            superEnemies.erase(superEnemies.begin() + i);
+            continue;
+          }
+          raylib::Rectangle enemyHitbox = sEnemy.getHitbox();
+          // for (bullet &ammo : p.getBullet()) {
+          for (size_t j = 0; j < p.getBullet().size(); j++) {
+            bullet &ammo = p.getBullet()[j];
+            raylib::Rectangle bulletHitBox = ammo.getHitbox();
+            if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
+              //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+              p.getBullet().erase(p.getBullet().begin() + j);
+              particleDestruction particle(sEnemy.getPos().x, sEnemy.getPos().y,
+                                           true, false);
+              particles.push_back(particle);
+              cameraController.start();
+              superEnemies.erase(superEnemies.begin() + i);
+              coins += 5;
+              coinsEarned += 5;
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              goto super_enemy_loop_continue3;
+            }
+          }
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
+            if (!forceShield) {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              frameCount = 0;
+              currentMenu = RACE_OVER;
+              setData(coinNumberFilePath, coins);
+            } else {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+              forceShield = false;
+#endif
+              superEnemies.erase(superEnemies.begin() + i);
+            }
+          }
+          sEnemy.update(p.getPos(), forceSlowMo);
+        }
+
+        for (size_t i = 0; i < smartEnemies.size(); i++) {
+        smart_enemy_loop_continue3:
+          if (i >= smartEnemies.size()) {
+            break;
+          }
+
+          smartEnemy &smEnemy = smartEnemies[i];
+          if (smEnemy.outOfScreen()) {
+            smartEnemies.erase(smartEnemies.begin() + i);
+            continue;
+          }
+          raylib::Rectangle enemyHitbox = smEnemy.getHitbox();
+          // for (bullet &ammo : p.getBullet()) {
+          for (size_t j = 0; j < p.getBullet().size(); j++) {
+            bullet &ammo = p.getBullet()[j];
+            raylib::Rectangle bulletHitBox = ammo.getHitbox();
+            if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
+              auto b = p.getBullet();
+              //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+              p.getBullet().erase(p.getBullet().begin() + j);
+              particleDestruction particle(smEnemy.getPos().x,
+                                           smEnemy.getPos().y, false, true);
+              particles.push_back(particle);
+              cameraController.start();
+              smartEnemies.erase(smartEnemies.begin() + i);
+              coins += 10;
+              coinsEarned += 10;
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              goto smart_enemy_loop_continue3;
+            }
+          }
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
+            if (!forceShield) {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              frameCount = 0;
+              currentMenu = RACE_OVER;
+              setData(coinNumberFilePath, coins);
+            } else {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              smartEnemies.erase(smartEnemies.begin() + i);
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+              forceShield = false;
+#endif
+            }
+          }
+          smEnemy.update(p.getPos(), forceSlowMo);
+        }
+
+        for (size_t i = 0; i < powerups.size(); i++) {
+          powerup &Power = powerups[i];
+          raylib::Rectangle powerHitbox = Power.getHitBox();
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, powerHitbox)) {
+            switch (Power.getType()) {
+            case SPEED_POWERUP:
+              forceSprint = true;
+              speedPowerUpFrameCounter =
+                  (levels.speedLevel >= 1 ? powerupExtraFrameCount
+                                          : powerupFrameCount);
+              break;
+            case AMMO_POWERUP:
+              forceAmmo = true;
+              ammoPowerUpFrameCounter =
+                  (levels.ammoLevel >= 1 ? powerupExtraFrameCount
+                                         : powerupFrameCount);
+              ;
+              break;
+            case SHIELD_POWERUP:
+              forceShield = true;
+              break;
+            default:
+              break;
+            }
+            powerups.erase(powerups.begin() + i);
+            if (forceSound) {
+              PlaySound(powerUpSounds[raylib::GetRandomValue(0, 1)]);
+            }
+            continue;
+          }
+          Power.update();
+        }
+
+        if (isSlowMoEnabled and isSlowMoStarted()) {
+          forceSlowMo = !forceSlowMo;
+        }
+
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+        if (speedPowerUpFrameCounter == 0) {
+          forceSprint = false;
+        } else if (forceSprint) {
+          speedPowerUpFrameCounter--;
+        }
+
+        if (ammoPowerUpFrameCounter == 0) {
+          forceAmmo = false;
+        } else if (forceAmmo) {
+          ammoPowerUpFrameCounter--;
+        }
+
+        if (slowMoFrameCounter == 0 and forceSlowMo) {
+          forceSlowMo = false;
+        } else if (forceSlowMo) {
+          slowMoFrameCounter--;
+        } else if (slowMoFrameCounter < (levels.slowMoLevel >= 3
+                                             ? (float)powerupMaxFrameCount
+                                             : (float)powerupExtraFrameCount)) {
+          slowMoFrameCounter++;
+          if (levels.slowMoLevel >= 2) {
+            slowMoFrameCounter++;
+          }
+        }
+
+#endif
+
+        for (size_t i = 0; i < particles.size(); i++) {
+          if (particles[i].IsFinished()) {
+            particles.erase(particles.begin() + i);
+            continue;
+          }
+          particles[i].Draw();
+          particles[i].Update();
+        }
+
+        if (!cameraController.isFinished()) {
+          cameraController.continueShake();
+        }
+
+        p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield,
+                 (levels.speedLevel >= 2), (levels.ammoLevel >= 2),
+                 (levels.shieldLevel >= 2 and forceShield),
+                 (levels.slowMoLevel >= 1 and forceSlowMo), forceSlowMo);
+
+        raylib::EndMode2D();
+
+        DrawProgressBar(30, 30, 300, 30, p.getCharge(),
+                        raylib::Color{0, 121, 241, 200},
+                        raylib::Color{255, 255, 255, 150});
+        DrawProgressBar(30, 90, 300, 30, p.getAmmo(),
+                        raylib::Color{253, 249, 0, 200},
+                        raylib::Color{255, 255, 255, 150});
+        if (isSlowMoEnabled) {
+          DrawSlowMoSign(slowMoFrameCounter,
+                         (levels.slowMoLevel >= 3 ? powerupMaxFrameCount
+                                                  : powerupExtraFrameCount));
+        }
+
+        double elapsed_time_s =
+            std::chrono::duration<double>(timerEnd - timerStart).count();
+        DrawText(formatTime(elapsed_time_s).c_str(), 30, 150, 50,
+                 raylib::WHITE);
+
+        std::vector<std::pair<POWERUP, std::optional<int>>> types;
+        if (forceShield) {
+          types.push_back({SHIELD_POWERUP, {}});
+        }
+        if (forceSprint) {
+          types.push_back({SPEED_POWERUP, {speedPowerUpFrameCounter}});
+        }
+        if (forceAmmo) {
+          types.push_back({AMMO_POWERUP, {ammoPowerUpFrameCounter}});
+        }
+        DrawPowerUpSign(types, powerupFrameCount);
+      }
+
+    } else if (currentMenu == RACE_OVER) {
+
+      std::string coinText = std::to_string(coinsEarned);
+
+      double elapsed_time_s =
+          std::chrono::duration<double>(timerEnd - timerStart).count();
+
+      DrawText("Game Over!", 300, 200, 80, raylib::WHITE);
+      for (int i = 280; i <= 285; i++)
+        DrawLine(280, i, 750, i, raylib::RED);
+
+      DrawText((std::string("You survived for: ") + formatTime(elapsed_time_s))
+                   .c_str(),
+               30, 100, 50, raylib::WHITE);
+      DrawText(coinText.c_str(), 30, 180, 50, raylib::WHITE);
+      raylib::DrawTexture(coinIcon,
+                          45 + raylib::MeasureText(coinText.c_str(), 50), 165,
+                          raylib::WHITE);
+
+      retryButton.draw();
+      menuButton.draw();
+
+      if (retryButton.isClicked()) {
+        if (forceSound)
+          PlaySound(buttonSound);
+        p = player({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
+        enemies.clear();
+        superEnemies.clear();
+        smartEnemies.clear();
+        powerups.clear();
+        particles.clear();
+        frameCount = 0;
+        currentMenu = TIME_RACE;
+        timerStart = std::chrono::high_resolution_clock::now();
+        timerEnd = std::chrono::high_resolution_clock::now();
+        currentScore = 0;
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+        forceAmmo = false;
+        forceSprint = false;
+        forceShield = false;
+        forceSlowMo = false;
+        speedPowerUpFrameCounter = 0;
+        ammoPowerUpFrameCounter = 0;
+        slowMoFrameCounter = 0;
+#endif
+        coinsEarned = 0;
+        shieldWasted = false;
+        circleColor = {8, 8, 33, 150};
+        paused = false;
+      } else if (menuButton.isClicked()) {
+        if (forceSound)
+          PlaySound(buttonSound);
+        p = player({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
+        enemies.clear();
+        superEnemies.clear();
+        smartEnemies.clear();
+        powerups.clear();
+        particles.clear();
+        frameCount = 0;
+        currentMenu = MAIN_MENU;
+        timerStart = std::chrono::high_resolution_clock::now();
+        timerEnd = std::chrono::high_resolution_clock::now();
+        currentScore = 0;
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+        forceAmmo = false;
+        forceSprint = false;
+        forceShield = false;
+        speedPowerUpFrameCounter = 0;
+        ammoPowerUpFrameCounter = 0;
+        slowMoFrameCounter = 0;
+#endif
+        coinsEarned = 0;
+        shieldWasted = false;
+        circleColor = {8, 8, 33, 150};
+        paused = false;
+      }
+
+      frameCount += 1;
+      if (frameCount % animFrameCount * 2 >= animFrameCount) {
+        p.noCheckUpdate();
+      } else if (frameCount == animFrameCount) {
+        frameCount = 0;
+      }
+
     } else if (currentMenu == TUTORIAL) {
 
       if (raylib::IsKeyPressed(raylib::KEY_ESCAPE)) {
@@ -1220,6 +1734,8 @@ int main() {
           particles.clear();
           frameCount = 0;
           currentMenu = MAIN_MENU;
+          timerStart = std::chrono::high_resolution_clock::now();
+          timerEnd = std::chrono::high_resolution_clock::now();
           currentScore = 0;
 #ifndef _METEOR_BUILD_WITH_CHEATS_
           forceAmmo = false;

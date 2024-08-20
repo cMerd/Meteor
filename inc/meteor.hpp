@@ -4,6 +4,7 @@
 #include <optional>
 #include <utility>
 #include <vector>
+#include <string>
 
 namespace raylib {
 #include "./raylib.h"
@@ -28,6 +29,8 @@ int getRandomValue();
 unsigned int getNewEnemyCount(int currentScore);
 bool shouldSpawnEnemies(int frameCount, int currentScore);
 
+std::string formatTime(double seconds);
+
 bool isSlowMoStarted();
 
 enum MENU {
@@ -41,7 +44,8 @@ enum MENU {
   SLOWMO_UPGRADE_MENU = 7,
   GAME_SELECTION_MENU = 8,
   TUTORIAL = 9,
-  TIME_RACE = 10
+  TIME_RACE = 10,
+  RACE_OVER = 11
 };
 
 struct powerUpgrades {
