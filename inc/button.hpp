@@ -7,6 +7,7 @@ namespace raylib {
 
 class button {
 public:
+  button();
   button(raylib::Rectangle buttonRectangle, raylib::Color buttonColor,
          const std::string &text, raylib::Color textColor, int fontSize,
          int textxPos, int textyPos, raylib::Color hoverColor);

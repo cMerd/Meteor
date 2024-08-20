@@ -11,15 +11,11 @@ enemy::enemy(int width, int height, float Speed) {
   const std::string filePath = std::string(raylib::GetApplicationDirectory()) +
                                "/../assets/meteor" + std::to_string(index) +
                                ".png";
-  raylib::Image img = raylib::LoadImage(filePath.c_str());
-  raylib::Texture2D texture_ = LoadTextureFromImage(img);
-  this->texture = texture_;
+  this->texture = raylib::LoadTexture(filePath.c_str());
 
   const std::string filePath2 = std::string(raylib::GetApplicationDirectory()) +
                                 "/../assets/bigMeteor.png";
-  raylib::Image img2 = raylib::LoadImage(filePath2.c_str());
-  raylib::Texture2D texture_2 = LoadTextureFromImage(img2);
-  this->bigTexture = texture_2;
+  this->bigTexture = raylib::LoadTexture(filePath2.c_str());
 }
 
 bool enemy::outOfScreen() { return (position.y >= yLimit); }

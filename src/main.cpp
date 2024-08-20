@@ -13,6 +13,7 @@
 #include "../inc/powerup.hpp"
 #include "../inc/smartEnemy.hpp"
 #include "../inc/superEnemy.hpp"
+#include "../inc/tutorial.hpp"
 
 int getData(const std::string &filePath);
 bool setData(const std::string &filePath, int highScore);
@@ -78,6 +79,9 @@ int main() {
 
   raylib::SetTargetFPS(60);
   raylib::SetExitKey(0);
+
+  tutorialUI tutorial;
+
   button startButton((raylib::Rectangle){300, 400, 400, 100}, raylib::BLACK,
                      "Start", raylib::RAYWHITE, 60, 400, 425, raylib::RED);
   button quitButton((raylib::Rectangle){300, 640, 400, 100}, raylib::BLACK,
@@ -136,6 +140,36 @@ int main() {
   button upgradeButton((raylib::Rectangle){50, 700, 200, 100}, raylib::GREEN,
                        "Upgrade", raylib::WHITE, 40, 65, 720, raylib::LIME);
 
+  button endlessButton((raylib::Rectangle){screenWidth - 250, 30, 200, 200},
+                       backgroundColor, "", raylib::WHITE, 0, 0, 0,
+                       raylib::DARKBLUE);
+
+  button raceButton((raylib::Rectangle){50, 290, 200, 200}, backgroundColor, "",
+                    raylib::WHITE, 0, 0, 0, raylib::DARKBLUE);
+
+  button tutorialButton((raylib::Rectangle){screenWidth - 250, 550, 200, 200},
+                        backgroundColor, "", raylib::WHITE, 0, 0, 0,
+                        raylib::DARKBLUE);
+
+  button enemySpawnButton((raylib::Rectangle){50, 350, 250, 50},
+                          raylib::Color{0, 0, 0, 150}, "Enemy", raylib::WHITE,
+                          30, 60, 355, raylib::RED);
+  button superEnemySpawnButton((raylib::Rectangle){50, 400, 250, 50},
+                               raylib::Color{0, 0, 0, 150}, "Super enemy",
+                               raylib::WHITE, 30, 60, 405, raylib::RED);
+  button smartEnemySpawnButton((raylib::Rectangle){50, 450, 250, 50},
+                               raylib::Color{0, 0, 0, 150}, "Smart enemy",
+                               raylib::WHITE, 30, 60, 455, raylib::RED);
+  button speedPowerupSpawnButton((raylib::Rectangle){50, 500, 250, 50},
+                                 raylib::Color{0, 0, 0, 150}, "Speed powerup",
+                                 raylib::WHITE, 30, 60, 505, raylib::RED);
+  button ammoPowerupSpawnButton((raylib::Rectangle){50, 550, 250, 50},
+                                raylib::Color{0, 0, 0, 150}, "Ammo powerup",
+                                raylib::WHITE, 30, 60, 555, raylib::RED);
+  button shieldPowerupSpawnButton((raylib::Rectangle){50, 600, 250, 50},
+                                  raylib::Color{0, 0, 0, 150}, "Shield powerup",
+                                  raylib::WHITE, 30, 60, 605, raylib::RED);
+
   raylib::Texture2D coinIcon = raylib::LoadTexture(
       (std::string(raylib::GetApplicationDirectory()) + "/../assets/coin.png")
           .c_str());
@@ -162,6 +196,21 @@ int main() {
   raylib::Texture2D lockedIcon = raylib::LoadTexture(
       (std::string(raylib::GetApplicationDirectory()) + "../assets/locked.png")
           .c_str());
+
+  raylib::Texture2D tutorialIcon =
+      raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                           "../assets/tutorial-icon.png")
+                              .c_str());
+
+  raylib::Texture2D raceIcon =
+      raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                           "../assets/race-icon.png")
+                              .c_str());
+
+  raylib::Texture2D endlessIcon =
+      raylib::LoadTexture((std::string(raylib::GetApplicationDirectory()) +
+                           "../assets/endless-icon.png")
+                              .c_str());
 
   raylib::Sound buttonSound = raylib::LoadSound(
       (std::string(raylib::GetApplicationDirectory()) + "/../assets/button.wav")
@@ -255,7 +304,7 @@ int main() {
         if (forceSound) {
           raylib::PlaySound(buttonSound);
         }
-        currentMenu = GAME;
+        currentMenu = GAME_SELECTION_MENU;
       } else if (quitButton.isClicked()) {
         break;
       } else if (soundButton.isClicked()) {
@@ -368,7 +417,7 @@ int main() {
 
           raylib::DrawCircle(p.getPos().x + 2.0f, p.getPos().y, rad,
                              circleColor);
-        } else if (rad != 0) {
+        } else if (rad > 0) {
           rad -= 5.0f;
 
           if (circleColor.r > backgroundColor.r) {
@@ -427,6 +476,9 @@ int main() {
 
         for (size_t i = 0; i < enemies.size(); i++) {
         enemy_loop_continue:
+          if (i >= enemies.size()) {
+            break;
+          }
           enemy &Enemy = enemies[i];
           if (Enemy.outOfScreen()) {
             enemies.erase(enemies.begin() + i);
@@ -491,6 +543,10 @@ int main() {
 
         for (size_t i = 0; i < superEnemies.size(); i++) {
         super_enemy_loop_continue:
+          if (i >= superEnemies.size()) {
+            break;
+          }
+
           superEnemy &sEnemy = superEnemies[i];
           if (sEnemy.outOfScreen()) {
             superEnemies.erase(superEnemies.begin() + i);
@@ -544,6 +600,10 @@ int main() {
 
         for (size_t i = 0; i < smartEnemies.size(); i++) {
         smart_enemy_loop_continue:
+          if (i >= smartEnemies.size()) {
+            break;
+          }
+
           smartEnemy &smEnemy = smartEnemies[i];
           if (smEnemy.outOfScreen()) {
             smartEnemies.erase(smartEnemies.begin() + i);
@@ -1075,6 +1135,442 @@ int main() {
       raylib::DrawText(
           (std::string("LVL ") + std::to_string(levels.slowMoLevel)).c_str(),
           150, 360, 30, raylib::WHITE);
+    } else if (currentMenu == GAME_SELECTION_MENU) {
+
+      endlessButton.draw();
+      if (endlessButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = GAME;
+      }
+
+      raceButton.draw();
+      if (raceButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = TIME_RACE;
+      }
+
+      tutorialButton.draw();
+      if (tutorialButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = TUTORIAL;
+      }
+
+      backButton.draw();
+      if (backButton.isClicked()) {
+        if (forceSound) {
+          raylib::PlaySound(buttonSound);
+        }
+        currentMenu = MAIN_MENU;
+      }
+
+      raylib::DrawText("Endless mode", 50, 50, 50, raylib::WHITE);
+      raylib::DrawText("Try to score a lot without getting hit", 50, 120, 25,
+                       raylib::Color{200, 200, 200, 200});
+      raylib::DrawText("Race mode",
+                       screenWidth - 50 - raylib::MeasureText("Race mode", 50),
+                       310, 50, raylib::WHITE);
+      raylib::DrawText(
+          "Try to survive as long as you can",
+          screenWidth - 50 -
+              raylib::MeasureText("Try to survive as long as you can", 25),
+          370, 25, raylib::Color{200, 200, 200, 200});
+      raylib::DrawText("Tutorial", 50, 570, 50, raylib::WHITE);
+      raylib::DrawText("Learn how to play the game", 50, 630, 25,
+                       raylib::Color{200, 200, 200, 200});
+      raylib::DrawLineEx({0, 260}, {screenWidth, 260}, 5, raylib::WHITE);
+      raylib::DrawLineEx({0, 520}, {screenWidth, 520}, 5, raylib::WHITE);
+
+      raylib::DrawTexture(tutorialIcon, screenWidth - 250, 540, raylib::WHITE);
+      raylib::DrawTexture(raceIcon, 50, 280, raylib::WHITE);
+      raylib::DrawTexture(endlessIcon, screenWidth - 250, 30, raylib::WHITE);
+    } else if (currentMenu == TIME_RACE) {
+
+    } else if (currentMenu == TUTORIAL) {
+
+      if (raylib::IsKeyPressed(raylib::KEY_ESCAPE)) {
+        paused = !paused;
+      }
+
+      if (paused) {
+
+        DrawText("Paused", 350, 200, 80, raylib::WHITE);
+        for (int i = 280; i <= 285; i++)
+          DrawLine(300, i, 700, i, raylib::RED);
+
+        menuButton.draw();
+        continueButton.draw();
+
+        if (menuButton.isClicked()) {
+          if (forceSound)
+            PlaySound(buttonSound);
+          p = player({500.0f, 400.0f}, raylib::RED, screenWidth, screenHeight);
+          enemies.clear();
+          superEnemies.clear();
+          smartEnemies.clear();
+          powerups.clear();
+          particles.clear();
+          frameCount = 0;
+          currentMenu = MAIN_MENU;
+          currentScore = 0;
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+          forceAmmo = false;
+          forceSprint = false;
+          forceShield = false;
+          speedPowerUpFrameCounter = 0;
+          ammoPowerUpFrameCounter = 0;
+          slowMoFrameCounter = 0;
+#endif
+          coinsEarned = 0;
+          shieldWasted = false;
+          circleColor = {8, 8, 33, 150};
+        } else if (continueButton.isClicked()) {
+          paused = false;
+        }
+
+      } else {
+        frameCount++;
+
+        if (forceSlowMo) {
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+          rad = (float)screenWidth / 2 *
+                (float)((float)((levels.slowMoLevel ? powerupMaxFrameCount
+                                                    : powerupExtraFrameCount) -
+                                slowMoFrameCounter) *
+                        100 /
+                        (levels.slowMoLevel ? powerupMaxFrameCount
+                                            : powerupExtraFrameCount)) /
+                100;
+#else
+          if (rad < screenWidth) {
+            rad++;
+          }
+#endif
+
+          if (circleColor.r < raylib::DARKGRAY.r) {
+            circleColor.r++;
+          }
+          if (circleColor.g < raylib::DARKGRAY.g) {
+            circleColor.g++;
+          }
+          if (circleColor.b < raylib::DARKGRAY.b) {
+            circleColor.b++;
+          }
+
+          raylib::DrawCircle(p.getPos().x + 2.0f, p.getPos().y, rad,
+                             circleColor);
+        } else if (rad > 0) {
+          rad -= 5.0f;
+
+          if (circleColor.r > backgroundColor.r) {
+            circleColor.r--;
+          }
+          if (circleColor.g > backgroundColor.g) {
+            circleColor.g--;
+          }
+          if (circleColor.b > backgroundColor.b) {
+            circleColor.b--;
+          }
+
+          raylib::DrawCircle(p.getPos().x + 2.0f, p.getPos().y, rad,
+                             circleColor);
+        }
+
+        for (size_t i = 0; i < enemies.size(); i++) {
+        enemy_loop_continue2:
+          if (i >= enemies.size()) {
+            break;
+          }
+          enemy &Enemy = enemies[i];
+          if (Enemy.outOfScreen()) {
+            enemies.erase(enemies.begin() + i);
+            continue;
+          }
+          raylib::Rectangle enemyHitbox = Enemy.getHitbox();
+          // for (bullet &ammo : p.getBullet()) {
+          for (size_t j = 0; j < p.getBullet().size(); j++) {
+            bullet &ammo = p.getBullet()[j];
+            raylib::Rectangle bulletHitBox = ammo.getHitbox();
+            if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
+                enemyHitbox.width == enemySize) {
+              //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+              p.getBullet().erase(p.getBullet().begin() + j);
+              particleDestruction particle(Enemy.getPos().x, Enemy.getPos().y,
+                                           false, false);
+              particles.push_back(particle);
+              cameraController.start();
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+
+              i++;
+              enemies.erase(enemies.begin() + i);
+              goto enemy_loop_continue2;
+            } else if (CheckCollisionRecs(enemyHitbox, bulletHitBox) and
+                       enemyHitbox.width == planetSize) {
+              p.getBullet().erase(p.getBullet().begin() + j);
+              goto enemy_loop_continue2;
+            }
+          }
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
+            if (!forceShield) {
+              frameCount = 0;
+            } else {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              if (levels.shieldLevel >= 1 and !shieldWasted) {
+                shieldWasted = true;
+              } else {
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+                forceShield = false;
+#endif
+              }
+              enemies.erase(enemies.begin() + i);
+            }
+          }
+          Enemy.update(forceSlowMo);
+        }
+
+        for (size_t i = 0; i < superEnemies.size(); i++) {
+        super_enemy_loop_continue2:
+          if (i >= superEnemies.size()) {
+            break;
+          }
+          superEnemy &sEnemy = superEnemies[i];
+          if (sEnemy.outOfScreen()) {
+            superEnemies.erase(superEnemies.begin() + i);
+            continue;
+          }
+          raylib::Rectangle enemyHitbox = sEnemy.getHitbox();
+          // for (bullet &ammo : p.getBullet()) {
+          for (size_t j = 0; j < p.getBullet().size(); j++) {
+            bullet &ammo = p.getBullet()[j];
+            raylib::Rectangle bulletHitBox = ammo.getHitbox();
+            if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
+              //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+              p.getBullet().erase(p.getBullet().begin() + j);
+              particleDestruction particle(sEnemy.getPos().x, sEnemy.getPos().y,
+                                           true, false);
+              particles.push_back(particle);
+              cameraController.start();
+              superEnemies.erase(superEnemies.begin() + i);
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              goto super_enemy_loop_continue2;
+            }
+          }
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
+            if (!forceShield) {
+              frameCount = 0;
+            } else {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+              forceShield = false;
+#endif
+              superEnemies.erase(superEnemies.begin() + i);
+            }
+          }
+          sEnemy.update(p.getPos(), forceSlowMo);
+        }
+
+        for (size_t i = 0; i < smartEnemies.size(); i++) {
+        smart_enemy_loop_continue2:
+          if (i >= smartEnemies.size()) {
+            break;
+          }
+          smartEnemy &smEnemy = smartEnemies[i];
+          if (smEnemy.outOfScreen()) {
+            smartEnemies.erase(smartEnemies.begin() + i);
+            continue;
+          }
+          raylib::Rectangle enemyHitbox = smEnemy.getHitbox();
+          // for (bullet &ammo : p.getBullet()) {
+          for (size_t j = 0; j < p.getBullet().size(); j++) {
+            bullet &ammo = p.getBullet()[j];
+            raylib::Rectangle bulletHitBox = ammo.getHitbox();
+            if (CheckCollisionRecs(enemyHitbox, bulletHitBox)) {
+              auto b = p.getBullet();
+              //*b = bullet({-100, -100, 1, 1}, raylib::WHITE);
+              p.getBullet().erase(p.getBullet().begin() + j);
+              particleDestruction particle(smEnemy.getPos().x,
+                                           smEnemy.getPos().y, false, true);
+              particles.push_back(particle);
+              cameraController.start();
+              smartEnemies.erase(smartEnemies.begin() + i);
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              goto smart_enemy_loop_continue2;
+            }
+          }
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, enemyHitbox)) {
+            if (!forceShield) {
+              frameCount = 0;
+            } else {
+              if (forceSound) {
+                PlaySound(killSounds[raylib::GetRandomValue(0, 3)]);
+              }
+              smartEnemies.erase(smartEnemies.begin() + i);
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+              forceShield = false;
+#endif
+            }
+          }
+          smEnemy.update(p.getPos(), forceSlowMo);
+        }
+
+        for (size_t i = 0; i < powerups.size(); i++) {
+          powerup &Power = powerups[i];
+          raylib::Rectangle powerHitbox = Power.getHitBox();
+          if (CheckCollisionCircleRec(p.getPos(), 20.0f, powerHitbox)) {
+            switch (Power.getType()) {
+            case SPEED_POWERUP:
+              forceSprint = true;
+              speedPowerUpFrameCounter =
+                  (levels.speedLevel >= 1 ? powerupExtraFrameCount
+                                          : powerupFrameCount);
+              break;
+            case AMMO_POWERUP:
+              forceAmmo = true;
+              ammoPowerUpFrameCounter =
+                  (levels.ammoLevel >= 1 ? powerupExtraFrameCount
+                                         : powerupFrameCount);
+              ;
+              break;
+            case SHIELD_POWERUP:
+              forceShield = true;
+              break;
+            default:
+              break;
+            }
+            powerups.erase(powerups.begin() + i);
+            if (forceSound) {
+              PlaySound(powerUpSounds[raylib::GetRandomValue(0, 1)]);
+            }
+            continue;
+          }
+          Power.update();
+        }
+
+        if (isSlowMoEnabled and isSlowMoStarted()) {
+          forceSlowMo = !forceSlowMo;
+        }
+
+#ifndef _METEOR_BUILD_WITH_CHEATS_
+        if (speedPowerUpFrameCounter == 0) {
+          forceSprint = false;
+        } else if (forceSprint) {
+          speedPowerUpFrameCounter--;
+        }
+
+        if (ammoPowerUpFrameCounter == 0) {
+          forceAmmo = false;
+        } else if (forceAmmo) {
+          ammoPowerUpFrameCounter--;
+        }
+
+        if (slowMoFrameCounter == 0 and forceSlowMo) {
+          forceSlowMo = false;
+        } else if (forceSlowMo) {
+          slowMoFrameCounter--;
+        } else if (slowMoFrameCounter < (levels.slowMoLevel >= 3
+                                             ? (float)powerupMaxFrameCount
+                                             : (float)powerupExtraFrameCount)) {
+          slowMoFrameCounter++;
+          if (levels.slowMoLevel >= 2) {
+            slowMoFrameCounter++;
+          }
+        }
+
+#endif
+
+        for (size_t i = 0; i < particles.size(); i++) {
+          if (particles[i].IsFinished()) {
+            particles.erase(particles.begin() + i);
+            continue;
+          }
+          particles[i].Draw();
+          particles[i].Update();
+        }
+
+        if (!cameraController.isFinished()) {
+          cameraController.continueShake();
+        }
+
+        p.update(forceSprint, forceAmmo, bulletSound, forceSound, forceShield,
+                 (levels.speedLevel >= 2), (levels.ammoLevel >= 2),
+                 (levels.shieldLevel >= 2 and forceShield),
+                 (levels.slowMoLevel >= 1 and forceSlowMo), forceSlowMo);
+
+        raylib::EndMode2D();
+
+        DrawProgressBar(30, 30, 300, 30, p.getCharge(),
+                        raylib::Color{0, 121, 241, 200},
+                        raylib::Color{255, 255, 255, 150});
+        DrawProgressBar(30, 90, 300, 30, p.getAmmo(),
+                        raylib::Color{253, 249, 0, 200},
+                        raylib::Color{255, 255, 255, 150});
+        if (isSlowMoEnabled) {
+          DrawSlowMoSign(slowMoFrameCounter,
+                         (levels.slowMoLevel >= 3 ? powerupMaxFrameCount
+                                                  : powerupExtraFrameCount));
+        }
+
+        std::vector<std::pair<POWERUP, std::optional<int>>> types;
+        if (forceShield) {
+          types.push_back({SHIELD_POWERUP, {}});
+        }
+        if (forceSprint) {
+          types.push_back({SPEED_POWERUP, {speedPowerUpFrameCounter}});
+        }
+        if (forceAmmo) {
+          types.push_back({AMMO_POWERUP, {ammoPowerUpFrameCounter}});
+        }
+        DrawPowerUpSign(types, powerupFrameCount);
+
+        DrawText("Spawners", 50, 300, 40, raylib::WHITE);
+        enemySpawnButton.draw();
+        superEnemySpawnButton.draw();
+        smartEnemySpawnButton.draw();
+        speedPowerupSpawnButton.draw();
+        ammoPowerupSpawnButton.draw();
+        shieldPowerupSpawnButton.draw();
+
+        if (enemySpawnButton.isClicked()) {
+
+          if (raylib::GetRandomValue(0, 100) % 10 == 0) {
+            enemies.push_back(
+                enemy(screenWidth, screenHeight, 3, planetSize, planetSize));
+          } else {
+            enemies.push_back(
+                enemy(screenWidth, screenHeight, (float)getRandomValue()));
+          }
+        } else if (superEnemySpawnButton.isClicked()) {
+          superEnemies.push_back(
+              superEnemy(screenWidth, screenHeight, (float)getRandomValue()));
+        } else if (smartEnemySpawnButton.isClicked()) {
+          smartEnemies.push_back(smartEnemy(screenWidth, screenHeight,
+                                            raylib::GetRandomValue(3, 4)));
+        } else if (speedPowerupSpawnButton.isClicked()) {
+          powerups.push_back(powerup(screenWidth, screenHeight, SPEED_POWERUP));
+        } else if (ammoPowerupSpawnButton.isClicked()) {
+          powerups.push_back(powerup(screenWidth, screenHeight, AMMO_POWERUP));
+        } else if (shieldPowerupSpawnButton.isClicked()) {
+          powerups.push_back(
+              powerup(screenWidth, screenHeight, SHIELD_POWERUP));
+        }
+
+        tutorial.draw();
+      }
     }
 
     raylib::EndDrawing();
