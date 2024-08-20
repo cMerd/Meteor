@@ -1,7 +1,7 @@
 #include "../inc/tutorial.hpp"
 
 namespace raylib {
-#include "./raylib.h"
+#include "../inc/raylib.h"
 }
 
 #include <sstream>
