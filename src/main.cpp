@@ -1205,8 +1205,6 @@ int main() {
       raylib::DrawTexture(endlessIcon, screenWidth - 250, 30, raylib::WHITE);
     } else if (currentMenu == TIME_RACE) {
 
-      timerEnd = std::chrono::high_resolution_clock::now();
-
       if (raylib::IsKeyPressed(raylib::KEY_ESCAPE)) {
         paused = !paused;
       }
@@ -1252,6 +1250,9 @@ int main() {
 
       } else {
 
+        timerEnd = std::chrono::high_resolution_clock::now();
+        double elapsed_time_s =
+            std::chrono::duration<double>(timerEnd - timerStart).count();
         frameCount++;
 
         if (forceSlowMo) {
@@ -1299,7 +1300,7 @@ int main() {
                              circleColor);
         }
 
-        if (shouldSpawnEnemies(frameCount, currentScore)) {
+        if (shouldSpawnEnemies(frameCount, elapsed_time_s / 5)) {
 
           for (unsigned int i = 0; i < getNewEnemyCount(currentScore); i++) {
             enemies.push_back(
@@ -1606,8 +1607,6 @@ int main() {
                                                   : powerupExtraFrameCount));
         }
 
-        double elapsed_time_s =
-            std::chrono::duration<double>(timerEnd - timerStart).count();
         DrawText(formatTime(elapsed_time_s).c_str(), 30, 150, 50,
                  raylib::WHITE);
 
