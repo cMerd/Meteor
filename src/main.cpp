@@ -305,6 +305,7 @@ int main() {
       musicButton.draw();
 
       if (startButton.isClicked()) {
+        p.checkForGamepad();
         if (forceSound) {
           raylib::PlaySound(buttonSound);
         }
@@ -696,7 +697,7 @@ int main() {
           Power.update();
         }
 
-        if (isSlowMoEnabled and isSlowMoStarted()) {
+        if (isSlowMoEnabled and isSlowMoStarted(p.getGamepad())) {
           forceSlowMo = !forceSlowMo;
         }
 
@@ -1543,7 +1544,7 @@ int main() {
           Power.update();
         }
 
-        if (isSlowMoEnabled and isSlowMoStarted()) {
+        if (isSlowMoEnabled and isSlowMoStarted(p.getGamepad())) {
           forceSlowMo = !forceSlowMo;
         }
 
@@ -1980,7 +1981,7 @@ int main() {
           Power.update();
         }
 
-        if (isSlowMoEnabled and isSlowMoStarted()) {
+        if (isSlowMoEnabled and isSlowMoStarted(p.getGamepad())) {
           forceSlowMo = !forceSlowMo;
         }
 

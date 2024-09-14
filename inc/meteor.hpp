@@ -31,7 +31,7 @@ bool shouldSpawnEnemies(int frameCount, int currentScore);
 
 std::string formatTime(double seconds);
 
-bool isSlowMoStarted();
+bool isSlowMoStarted(std::optional<int> gamepad);
 
 enum MENU {
   MAIN_MENU = 0,

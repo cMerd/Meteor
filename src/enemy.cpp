@@ -8,13 +8,9 @@ enemy::enemy(int width, int height, float Speed) {
   this->yLimit = height + 3.0f;
   this->speed = Speed;
   int index = raylib::GetRandomValue(0, 3);
-  const std::string filePath = std::string(raylib::GetApplicationDirectory()) +
-                               "/../assets/meteor" + std::to_string(index) +
-                               ".png";
+  const std::string filePath = "assets/meteor" + std::to_string(index) + ".png";
   this->texture = raylib::LoadTexture(filePath.c_str());
-
-  const std::string filePath2 = std::string(raylib::GetApplicationDirectory()) +
-                                "/../assets/bigMeteor.png";
+  const std::string filePath2 = "assets/big_meteor.png";
   this->bigTexture = raylib::LoadTexture(filePath2.c_str());
 }
 
@@ -26,10 +22,10 @@ void enemy::update(bool slowDown) {
   }
 
   position.y += (slowDown ? speed / 3.0f : speed);
-  if (enemy_width != enemySize)
-    DrawTexture(bigTexture, position.x, position.y, raylib::WHITE);
-  else {
-    DrawTexture(texture, position.x, position.y, raylib::WHITE);
+  if (enemy_width != enemySize) {
+    raylib::DrawTexture(bigTexture, position.x, position.y, raylib::WHITE);
+  } else {
+    raylib::DrawTexture(texture, position.x, position.y, raylib::WHITE);
   }
 }
 
@@ -48,6 +44,8 @@ enemy::enemy(int width, int height, float Speed, int enemyWidth,
   this->speed = Speed;
   this->enemy_height = enemyHeight;
   this->enemy_width = enemyWidth;
+  const std::string filePath2 = "assets/big_meteor.png";
+  this->bigTexture = raylib::LoadTexture(filePath2.c_str());
 }
 
 raylib::Vector2 enemy::getPos() { return this->position; }

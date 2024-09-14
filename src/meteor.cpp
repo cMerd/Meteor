@@ -19,7 +19,12 @@ bool shouldSpawnEnemies(int frameCount, int currentScore) {
           2) == 1;
 }
 
-bool isSlowMoStarted() { return raylib::IsKeyPressed(raylib::KEY_F); }
+bool isSlowMoStarted(std::optional<int> gamepad) {
+  return (gamepad &&
+          raylib::IsGamepadButtonDown(gamepad.value(),
+                                      raylib::GAMEPAD_BUTTON_LEFT_TRIGGER_1)) or
+         raylib::IsKeyPressed(raylib::KEY_F);
+}
 
 unsigned int getNewEnemyCount(int currentScore) {
   return currentScore / 100 + 8;

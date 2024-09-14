@@ -2,6 +2,7 @@
 
 #include "bullet.hpp"
 #include <array>
+#include <optional>
 #include <vector>
 
 class player {
@@ -18,6 +19,8 @@ public:
   std::vector<bullet> &getBullet();
   raylib::Vector2 getPos();
   void destroy();
+  void checkForGamepad();
+  std::optional<int> getGamepad();
 
 private:
   void checkPosition();
@@ -25,7 +28,8 @@ private:
                    bool increase, bool reloadFaster);
   float checkSprint(float changeVal, bool force);
 
-  int frameCount = 0, index = 0;
+  bool gamepadAvailable = false;
+  int frameCount = 0, index = 0, gamepadID = 0;
   float charge = 100.0f, ammoCharge = 0.0f;
   raylib::Vector2 player_pos;
   raylib::Color player_color;
@@ -34,4 +38,11 @@ private:
   raylib::Texture2D bulletTexture;
   std::array<raylib::Texture2D, 4> playerTextures;
   std::array<raylib::Texture2D, 4> playerwShieldTextures;
+
+  static constexpr const char *PS4_WIRELESS_CONTROLLER_NAME =
+      "Wireless Controller";
+  static constexpr const char *PS4_WIRED_CONTROLLER_NAME =
+      "Sony Interactive Entertainment Wireless Controller";
+  static constexpr const char *PS4V2_WIRED_CONTROLLER_NAME =
+      "Sony Computer Entertainment Wireless Controller";
 };

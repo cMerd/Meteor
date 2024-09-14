@@ -24,6 +24,7 @@ player::player(raylib::Vector2 playerPos, raylib::Color playerColor,
   bulletTexture = raylib::LoadTexture(
       (std::string(raylib::GetApplicationDirectory()) + "/../assets/bullet.png")
           .c_str());
+  checkForGamepad();
 }
 
 void player::destroy() {
@@ -34,6 +35,13 @@ void player::destroy() {
     raylib::UnloadTexture(playerwShieldTextures[i]);
   }
   raylib::UnloadTexture(bulletTexture);
+}
+
+std::optional<int> player::getGamepad() {
+  if (gamepadAvailable) {
+    return gamepadID;
+  }
+  return {};
 }
 
 void player::update(bool force, bool force2, raylib::Sound bulletSound,
@@ -56,14 +64,29 @@ void player::update(bool force, bool force2, raylib::Sound bulletSound,
     changeValue /= 1.5f;
   }
 
-  if (IsKeyDown(raylib::KEY_RIGHT) or IsKeyDown(raylib::KEY_D))
+  if (IsKeyDown(raylib::KEY_RIGHT) or IsKeyDown(raylib::KEY_D) or
+      raylib::IsGamepadButtonDown(gamepadID,
+                                  raylib::GAMEPAD_BUTTON_LEFT_FACE_RIGHT))
     player_pos.x += changeValue;
-  if (IsKeyDown(raylib::KEY_LEFT) or IsKeyDown(raylib::KEY_A))
+  if (IsKeyDown(raylib::KEY_LEFT) or IsKeyDown(raylib::KEY_A) or
+      raylib::IsGamepadButtonDown(gamepadID,
+                                  raylib::GAMEPAD_BUTTON_LEFT_FACE_LEFT))
     player_pos.x -= changeValue;
-  if (IsKeyDown(raylib::KEY_UP) or IsKeyDown(raylib::KEY_W))
+  if (IsKeyDown(raylib::KEY_UP) or IsKeyDown(raylib::KEY_W) or
+      raylib::IsGamepadButtonDown(gamepadID,
+                                  raylib::GAMEPAD_BUTTON_LEFT_FACE_UP))
     player_pos.y -= changeValue;
-  if (IsKeyDown(raylib::KEY_DOWN) or IsKeyDown(raylib::KEY_S))
+  if (IsKeyDown(raylib::KEY_DOWN) or IsKeyDown(raylib::KEY_S) or
+      raylib::IsGamepadButtonDown(gamepadID,
+                                  raylib::GAMEPAD_BUTTON_LEFT_FACE_DOWN))
     player_pos.y += changeValue;
+
+  if (gamepadAvailable) {
+    player_pos.y += changeValue * GetGamepadAxisMovement(
+                                      gamepadID, raylib::GAMEPAD_AXIS_LEFT_Y);
+    player_pos.x += changeValue * GetGamepadAxisMovement(
+                                      gamepadID, raylib::GAMEPAD_AXIS_LEFT_X);
+  }
 
   checkPosition();
 
@@ -107,7 +130,9 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
       ammoCharge = std::min(100.0f, ammoCharge);
     }
     if (raylib::IsKeyDown(raylib::KEY_ENTER) or
-        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
+        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON) or
+        raylib::IsGamepadButtonDown(gamepadID,
+                                    raylib::GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) {
       if (ammoCharge >= 100.0f) {
         if (forceSound)
           PlaySound(bSound);
@@ -119,7 +144,9 @@ void player::checkBullet(bool force, raylib::Sound bSound, bool forceSound,
     }
   } else {
     if (raylib::IsKeyDown(raylib::KEY_ENTER) or
-        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON)) {
+        raylib::IsMouseButtonDown(raylib::MOUSE_LEFT_BUTTON) or
+        raylib::IsGamepadButtonDown(gamepadID,
+                                    raylib::GAMEPAD_BUTTON_RIGHT_FACE_LEFT)) {
       if (ammoCharge >= 100.0f) {
         if (forceSound)
           PlaySound(bSound);
@@ -141,17 +168,30 @@ float player::checkSprint(float changeVal, bool force) {
     changeVal += 4.0f;
     charge = 100.0f;
   } else {
+    float axisChange = -1.0f;
+    if (gamepadAvailable) {
+      axisChange = (GetGamepadAxisMovement(gamepadID,
+                                           raylib::GAMEPAD_AXIS_RIGHT_TRIGGER) +
+                    1) /
+                   2.0f;
+    }
     if (raylib::IsKeyDown(raylib::KEY_LEFT_SHIFT) or
-        raylib::IsKeyDown(raylib::KEY_RIGHT_SHIFT)) {
+        raylib::IsKeyDown(raylib::KEY_RIGHT_SHIFT) or axisChange > 0.0f) {
       if (charge > 0) {
-        changeVal += 2.0f;
-        charge -= 2.0f;
+        float change = 2.0f;
+        if (axisChange > 0.0f) {
+          change *= axisChange;
+        }
+        changeVal += change;
+        charge -= change;
       }
       charge = std::max(charge, 0.0f);
+      charge = std::min(charge, 100.0f);
     } else {
       if (charge != 100.0f)
         charge += 1.0f;
       charge = std::max(charge, 0.0f);
+      charge = std::min(charge, 100.0f);
     }
   }
   return changeVal;
@@ -173,4 +213,19 @@ void player::noCheckUpdate() {
   raylib::DrawTexture(playerTextures[index], player_pos.x - 20,
                       player_pos.y - 20, raylib::WHITE);
   frameCount++; // will be called every frame (60 fps)
+}
+
+void player::checkForGamepad() {
+  gamepadAvailable = false;
+  for (gamepadID = 0; raylib::IsGamepadAvailable(gamepadID); gamepadID++) {
+    if (raylib::TextIsEqual(raylib::GetGamepadName(gamepadID),
+                            PS4_WIRED_CONTROLLER_NAME) or
+        raylib::TextIsEqual(raylib::GetGamepadName(gamepadID),
+                            PS4V2_WIRED_CONTROLLER_NAME) or
+        raylib::TextIsEqual(raylib::GetGamepadName(gamepadID),
+                            PS4_WIRELESS_CONTROLLER_NAME)) {
+      gamepadAvailable = true;
+      break;
+    }
+  }
 }

@@ -22,7 +22,6 @@ public:
 private:
   void drawImage();
   void drawRect();
-
   bool drawTexture;
 
   raylib::Rectangle button_rectangle;
